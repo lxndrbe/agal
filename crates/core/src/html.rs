@@ -717,6 +717,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
     .badge-error { background: rgba(239,68,68,.12); color: var(--err); border: 1px solid rgba(239,68,68,.25); }
     .badge-warn { background: rgba(245,158,11,.12); color: var(--warn); border: 1px solid rgba(245,158,11,.25); }
     .badge-info { background: rgba(56,189,248,.10); color: var(--info); border: 1px solid rgba(56,189,248,.20); }
+    .badge-build { background: rgba(100,116,139,.10); color: #94a3b8; border: 1px dashed rgba(100,116,139,.35); }
 
     .comp-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
     .comp-tag {
@@ -1118,9 +1119,13 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         const depLines = [];
         if (internal.length) {
           depLines.push('<div class="section-title">Internal</div>');
+          const buildTargets = new Set(edges
+            .filter(e => e.source === n.id && (e.kind === 'build_depends_on' || e.kind === 'dev_depends_on'))
+            .map(e => e.target));
           internal.slice().sort().forEach(d => {
             const short = d.replace(/^plugins\//, '').replace(/^crates\//, '');
-            depLines.push(`<div class="info-row">${short}</div>`);
+            const badge = buildTargets.has(d) ? ' <span class="badge badge-build">build</span>' : '';
+            depLines.push(`<div class="info-row">${short}${badge}</div>`);
           });
         }
         if (external.length) {
@@ -1206,6 +1211,12 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         const toShow = cy.nodes().filter(n => neighborIds.has(n.data().id));
         cy.nodes().not(toShow).style('display', 'none');
         toShow.style('display', 'element');
+        // Show every edge inside the focus neighborhood (incl. build/dev deps) —
+        // applyFilters may have hidden them, leaving focused nodes visually orphaned.
+        cy.edges().forEach(e => {
+          const ok = neighborIds.has(e.data('source')) && neighborIds.has(e.data('target'));
+          e.style('display', ok ? 'element' : 'none');
+        });
 
         let cardsHtml = '<div class="focus-cards">';
         let cardCount = 0;
@@ -1328,11 +1339,13 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       }
 
       function hubCrateIds() {
-        // Crates that plugins actually depend on (not build-only noise).
+        // Crates that plugins actually depend on (not build-only noise —
+        // unless the user explicitly enabled build edges).
+        const showBuild = document.getElementById('show-build-edges').checked;
         const pluginIds = new Set(nodes.filter(n => n.kind === 'plugin').map(n => n.id));
         const hubs = new Set();
         edges.forEach(e => {
-          if (e.kind === 'build_depends_on' || e.kind === 'dev_depends_on') return;
+          if ((e.kind === 'build_depends_on' || e.kind === 'dev_depends_on') && !showBuild) return;
           const srcPlugin = pluginIds.has(e.source);
           const tgtPlugin = pluginIds.has(e.target);
           if (srcPlugin || tgtPlugin) {
@@ -1349,6 +1362,20 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         return hubs;
       }
 
+      function persistShowBuild() {
+        try {
+          localStorage.setItem('agal.showBuildEdges',
+            document.getElementById('show-build-edges').checked ? '1' : '0');
+        } catch (_) { /* file:// or restricted webview — ignore */ }
+      }
+
+      function restoreShowBuild() {
+        try {
+          const saved = localStorage.getItem('agal.showBuildEdges');
+          if (saved !== null) document.getElementById('show-build-edges').checked = saved === '1';
+        } catch (_) { /* ignore */ }
+      }
+
       function edgeAllowed(kind) {
         const showBuild = document.getElementById('show-build-edges').checked;
         if (kind === 'build_depends_on' || kind === 'dev_depends_on') return showBuild;
@@ -1363,6 +1390,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         document.getElementById('framework-filter').value = 'all';
         document.getElementById('search').value = '';
         document.getElementById('show-build-edges').checked = false;
+        persistShowBuild();
         applyFilters(true);
       }
 
@@ -1422,7 +1450,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       document.getElementById('kind-filter').addEventListener('change', () => applyFilters(true));
       document.getElementById('framework-filter').addEventListener('change', () => applyFilters(true));
       document.getElementById('search').addEventListener('input', () => applyFilters(true));
-      document.getElementById('show-build-edges').addEventListener('change', () => applyFilters(false));
+      document.getElementById('show-build-edges').addEventListener('change', () => { persistShowBuild(); applyFilters(false); });
       document.getElementById('show-info-findings').addEventListener('change', () => renderFindings());
       document.getElementById('drawer-close').addEventListener('click', closeDrawer);
 
@@ -1639,6 +1667,8 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       window._cy = cy;
 
       cy.ready(() => {
+        // Restore persisted build-edge visibility before first filter pass
+        restoreShowBuild();
         // Default: overview disk (plugins ring + hub crates center)
         applyFilters(true);
       });

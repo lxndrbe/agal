@@ -67,7 +67,7 @@ pub struct MigrationSpec {
     pub to: String,
 }
 
-/// Built-in editor-adapter migration when `agal.toml` omits `[migrations.*]`.
+/// Built-in editor-adapter migration when the config omits `[migrations.*]`.
 /// Matches the common LX / truce path; override or extend via config.
 pub fn default_migrations() -> BTreeMap<String, MigrationSpec> {
     let mut m = BTreeMap::new();
@@ -82,7 +82,7 @@ pub fn default_migrations() -> BTreeMap<String, MigrationSpec> {
 }
 
 impl ProjectConfig {
-    /// Load `agal.toml`.
+    /// Load the project config (`agal.toml`, falling back to `audiolabs.toml` / `audio-graph.toml`).
     pub fn load(project_root: &Path) -> Self {
         let path = config_path(project_root);
         let mut cfg = if let Some(path) = path {
@@ -105,11 +105,14 @@ impl ProjectConfig {
     }
 }
 
-/// Returns `Some(path)` if `agal.toml` exists next to the root Cargo.toml.
+/// Returns the config path next to the root Cargo.toml.
+/// Lookup order: `agal.toml` (current) → `audiolabs.toml` → `audio-graph.toml` (legacy).
 pub fn config_path(project_root: &Path) -> Option<std::path::PathBuf> {
-    let primary = project_root.join("agal.toml");
-    if primary.is_file() {
-        return Some(primary);
+    for name in ["agal.toml", "audiolabs.toml", "audio-graph.toml"] {
+        let candidate = project_root.join(name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
     }
     None
 }

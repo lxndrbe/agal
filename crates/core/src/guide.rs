@@ -65,7 +65,8 @@ agal skills sync
 Requires `agal` on your `PATH`, or install from the tool repo:  
 `cargo install --path . --force` in **Agentic Audiolab**.
 
-Config (optional): **`agal.toml`** next to the root `Cargo.toml`
+Config (optional): **`agal.toml`** next to the root `Cargo.toml`  
+(older names `audiolabs.toml` and `audio-graph.toml` still load if the new file is missing).
 
 ---
 

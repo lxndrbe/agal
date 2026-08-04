@@ -6,7 +6,18 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
-## [Unreleased]
+## [0.4.2] — 2026-08-04
+
+### Added
+- **`agal.toml` is the canonical config name** — loader order: `agal.toml` → `audiolabs.toml` → legacy `audio-graph.toml`
+- **HTML deps tab** — `build` badge on `build_depends_on` / `dev_depends_on` entries
+- **`show build edges` persists** — checkbox state stored in `localStorage`
+
+### Fixed
+- **Focus view orphaned build-dep nodes** — `focusNode` showed neighbors over build/dev edges without re-showing the edges themselves (e.g. `lx-slint-build` visible but lineless)
+- **Hub detection ignored build edges** even with `show build edges` enabled — build-only crates stayed invisible in overview mode
+
+## [0.4.1] — 2026-07-30
 
 ### Added
 - **Single-skill sync** — `agal skills sync --only ui/slint` (also `04-ui/slint`, unique bare stems, mixes with groups)
