@@ -48,16 +48,27 @@ HTML / Cheatsheet = humans. Do **not** skip to L0 by default.
 | findings | **errors first**, then warns; skip info until escalate |
 | JSON / slice | only after map + note are not enough |
 
+## Equipped vs catalog
+
+- **Equipped (on disk)** — top of `AGAL.md` after generate/sync: group names + file count.
+- **Catalog** — full pack list + per-skill index lower in `AGAL.md`.
+- If equipped is empty → `agal skills sync` before loading skills.
+
+## Focus strip (L3)
+
+When health is **degraded** / **blocked**, `AGAL.md` lists top error/warn findings (path + fix).  
+Fix those first. Full list remains in `audiolabs.agent.md`.
+
 ## Task loadouts
 
-| Task | `agal skills sync --only …` | Load in context |
-|------|-----------------------------|-----------------|
-| DSP / process / realtime | `core` (default) | `00-core/*` as needed |
-| Policy / terse edits | `policy` | `caveman` **or** `ponytail` |
-| Slint UI | `core,ui/slint` | `slint` (+ core if DSP) |
-| CLAP ship / formats | `core,formats/clap` | `clap` |
-| Agent orientation playbook | `agents` | `agent-usage` |
-| Full pack | `all` | rare — context bloat |
+| Task | `agal skills sync --only …` | Load in context | Verify (when applicable) |
+|------|-----------------------------|-----------------|--------------------------|
+| DSP / process / realtime | `core` (default) | `00-core/*` as needed | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Policy / terse edits | `policy` | `caveman` **or** `ponytail` | — |
+| Slint UI | `core,ui/slint` | `slint` (+ core if DSP) | — |
+| CLAP ship / formats | `core,formats/clap` | `clap` | after build: `clap-validator validate path/to/plugin.clap` |
+| Agent orientation playbook | `agents` | `agent-usage` | — |
+| Full pack | `all` | rare — context bloat | — |
 
 ## Stack layers
 
@@ -97,6 +108,8 @@ At **L1**, scan the ```text [ATOM] …``` block first, then the human body.
 ```text
 [ATOM] type=decision|lesson|constraint | detail=…
 ```
+
+**Workspace memory** — `notes/_workspace.md`: cross-plugin durable notes. Created once; **never** overwritten by `agal .`. Keep ~80 lines.
 
 ## Workspace root vs agal folder
 

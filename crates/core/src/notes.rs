@@ -40,7 +40,38 @@ pub fn write_notes(output_dir: &Path, graph: &Audiolabs) -> Result<usize, String
     }
 
     write_index(&notes_dir, graph)?;
+    ensure_workspace_note(&notes_dir)?;
     Ok(written)
+}
+
+/// Durable workspace-level memory. Created once; **never** overwritten by generate.
+fn ensure_workspace_note(notes_dir: &Path) -> Result<(), String> {
+    let path = notes_dir.join("_workspace.md");
+    if path.exists() {
+        return Ok(());
+    }
+    let body = r#"# Workspace memory
+
+**Summary:** Durable cross-plugin / cross-crate notes for agents.  
+**Never overwritten** by `agal .` (unlike per-node AUTO blocks).  
+Keep this file short (~80 lines). Prefer `[ATOM]` one-liners.
+
+## Atoms
+
+```text
+[ATOM] type=decision|lesson|constraint | detail=…
+```
+
+## Open
+
+- [ ]
+
+## Decisions
+
+_Workspace-wide architecture choices worth remembering._
+"#;
+    fs::write(&path, body).map_err(|e| format!("cannot write {}: {}", path.display(), e))?;
+    Ok(())
 }
 
 fn sanitize_filename(name: &str) -> String {
@@ -455,6 +486,7 @@ fn write_index(notes_dir: &Path, graph: &Audiolabs) -> Result<(), String> {
         s,
         "# notes index\n\n\
          Auto-generated. Per-node notes for focus work.\n\n\
+         **Workspace memory** (durable, never overwritten): [`_workspace.md`](./_workspace.md)\n\n\
          ## plugins\n"
     );
     for n in graph.nodes.iter().filter(|n| n.kind == "plugin") {

@@ -173,11 +173,12 @@ reason = "product surface intentional"
 
 | Layer | Artifact |
 |-------|----------|
-| **L3** | `AGAL.md` — entry, budget, loadouts, skills index |
+| **L3** | `AGAL.md` — entry, **focus strip**, equipped skills, budget, loadouts |
 | **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
 | **L1** | `notes/&lt;focus&gt;.md` — **graph atoms first**, then human body |
 | **L0** | slice / `audiolabs.json` — escalate only |
 | loadout | ≤1 skill file (match `triggers`) — not a layer |
+| durable | `notes/_workspace.md` — workspace memory (never overwritten) |
 
 1. **L3** `AGAL.md`
 2. **L2** `audiolabs.agent.md` — structural map + **health**
@@ -198,14 +199,16 @@ reason = "product surface intentional"
 
 ### Task loadouts
 
-| Task | `agal skills sync --only …` |
-|------|-----------------------------|
-| DSP / realtime | `core` (default) |
-| Policy / terse edits | `policy` |
-| Slint UI | `core,ui/slint` |
-| CLAP / formats | `core,formats/clap` |
-| Agent playbook | `agents` |
-| Everything | `all` (rare) |
+| Task | `agal skills sync --only …` | Verify (when applicable) |
+|------|-----------------------------|--------------------------|
+| DSP / realtime | `core` (default) | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Policy / terse edits | `policy` | — |
+| Slint UI | `core,ui/slint` | — |
+| CLAP / formats | `core,formats/clap` | `clap-validator validate path/to/plugin.clap` (after build) |
+| Agent playbook | `agents` | — |
+| Everything | `all` (rare) | — |
+
+**Equipped** skills (what is already under `skills/`) are listed at the top of **`AGAL.md`** after each generate / skills sync.
 
 ### Stack layers
 
@@ -217,6 +220,7 @@ reason = "product surface intentional"
 |------|-------|--------|
 | **Graph atoms (auto)** | note AUTO block, fenced `[ATOM]` lines | scan: migration, frameworks, key edges, error/warn (max 12) |
 | **Human atoms** | below HUMAN marker | you / agent decisions & lessons |
+| **Workspace memory** | `notes/_workspace.md` | durable; created once; **never** overwritten |
 
 ```text
 [ATOM] type=fact|constraint|decision|lesson | detail=…

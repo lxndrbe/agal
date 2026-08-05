@@ -4,8 +4,11 @@ use std::fs;
 use std::path::Path;
 
 use crate::delta;
-use crate::findings::{Finding, Severity, actionable, count_by_severity, health};
+use crate::findings::{Finding, Health, Severity, actionable, count_by_severity, health};
 use crate::{Audiolabs, Edge, Node};
+
+/// Max error/warn lines in L3 focus strip.
+const MAX_FOCUS_FINDINGS: usize = 8;
 
 /// Compact markdown for AI agents (~1–3k tokens for typical audio workspace).
 ///
@@ -295,6 +298,14 @@ pub fn render_agal_md(
         out = output_dir_name,
     );
 
+    // P1: top actionable findings at L3 when health is not ok.
+    if let Some(g) = graph {
+        write_focus_findings_strip(&mut s, g);
+    }
+
+    // P1: what is actually on disk under skills/ (not the catalog).
+    write_equipped_skills(&mut s, skills_dir);
+
     let _ = writeln!(
         s,
         "## Root AGENTS.md (yours)\n\n\
@@ -316,8 +327,10 @@ pub fn render_agal_md(
          | **L3** entry | **this file** (`AGAL.md`) | always first — budget, loadouts, skills index |\n\
          | **L2** map | `audiolabs.agent.md` (+ `delta` if present) | need structure / health / what changed |\n\
          | **L1** focus | `notes/<focus>.md` (scan **`[ATOM]`** first) | work on one plugin/crate |\n\
-         | **L0** raw | `*.slice.json` / `audiolabs.json` | map + note still insufficient |\n\n\
+         | **L0** raw | `*.slice.json` / `audiolabs.json` | map + note still insufficient |\n\
+         | durable | `notes/_workspace.md` | cross-cutting decisions (never overwritten) |\n\n\
          Skills are a **side loadout** (≤1 file), not a layer — use `triggers` in the index.  \n\
+         When health ≠ ok, read **Focus** strip on this page first.  \n\
          HTML / Cheatsheet = humans. Do **not** skip to L0 by default.\n"
     );
 
@@ -351,14 +364,14 @@ pub fn render_agal_md(
         s,
         "## Task loadouts\n\n\
          Sync once, then load **only** what the task needs:\n\n\
-         | Task | `agal skills sync --only …` | Load in context |\n\
-         |------|-----------------------------|-----------------|\n\
-         | DSP / process / realtime | `core` (default) | `00-core/*` as needed |\n\
-         | Policy / terse edits | `policy` | `caveman` **or** `ponytail` |\n\
-         | Slint UI | `core,ui/slint` | `slint` (+ core if DSP) |\n\
-         | CLAP ship / formats | `core,formats/clap` | `clap` |\n\
-         | Agent orientation playbook | `agents` | `agent-usage` |\n\
-         | Full pack | `all` | rare — context bloat |\n"
+         | Task | `agal skills sync --only …` | Load in context | Verify (when applicable) |\n\
+         |------|-----------------------------|-----------------|--------------------------|\n\
+         | DSP / process / realtime | `core` (default) | `00-core/*` as needed | `cargo clippy --workspace --all-targets -- -D warnings` |\n\
+         | Policy / terse edits | `policy` | `caveman` **or** `ponytail` | — |\n\
+         | Slint UI | `core,ui/slint` | `slint` (+ core if DSP) | — |\n\
+         | CLAP ship / formats | `core,formats/clap` | `clap` | after build: `clap-validator validate path/to/plugin.clap` |\n\
+         | Agent orientation playbook | `agents` | `agent-usage` | — |\n\
+         | Full pack | `all` | rare — context bloat | — |\n"
     );
 
     let _ = writeln!(
@@ -398,7 +411,8 @@ pub fn render_agal_md(
          | `audiolabs.agent.md` | structural map + health |\n\
          | `audiolabs.delta.md` | structural diff |\n\
          | `audiolabs.json` | full edges / params / info findings |\n\
-         | `notes/` | auto header + human body |\n\
+         | `notes/` | auto header + human body + graph atoms |\n\
+         | `notes/_workspace.md` | durable workspace memory (**never** overwritten) |\n\
          | `skills/` | synced tool packs (see above) |\n\
          | `Cheatsheet.md` | human CLI guide |\n\
          | `audiolabs.html` | human graph |\n\
@@ -497,6 +511,117 @@ fn write_migration_section(s: &mut String, ms: &crate::MigrationSummary) {
             ms.total_migrated
         );
     }
+}
+
+/// L3 strip: top error/warn findings when health is degraded or blocked.
+fn write_focus_findings_strip(s: &mut String, graph: &Audiolabs) {
+    let h = health(&graph.findings);
+    if h == Health::Ok {
+        return;
+    }
+    let mut items: Vec<&Finding> = actionable(&graph.findings).collect();
+    if items.is_empty() {
+        return;
+    }
+    items.sort_by_key(|f| match f.severity {
+        Severity::Error => 0u8,
+        Severity::Warn => 1,
+        Severity::Info => 2,
+    });
+    let total = items.len();
+    let shown = items.iter().take(MAX_FOCUS_FINDINGS);
+
+    let _ = writeln!(
+        s,
+        "## Focus (health = **{h}**)\n\n\
+         Fix these before feature work. Full list: `audiolabs.agent.md`.\n"
+    );
+    for f in shown {
+        let mut line = format!("- [{}] **{}**: {}", f.severity, f.code, truncate_line(&f.message, 100));
+        if let Some(node) = &f.node {
+            line.push_str(&format!(" · `{}`", short_node(node)));
+        }
+        if let Some(path) = &f.path {
+            line.push_str(&format!(" · `{}`", path));
+        }
+        if let Some(fix) = &f.fix {
+            line.push_str(&format!(" · fix: {}", truncate_line(fix, 80)));
+        }
+        let _ = writeln!(s, "{line}");
+    }
+    if total > MAX_FOCUS_FINDINGS {
+        let _ = writeln!(
+            s,
+            "\n_… {} more error/warn in `audiolabs.agent.md`._\n",
+            total - MAX_FOCUS_FINDINGS
+        );
+    } else {
+        let _ = writeln!(s);
+    }
+}
+
+/// What skill packs are actually present under `skills/` (on disk).
+fn write_equipped_skills(s: &mut String, skills_dir: Option<&Path>) {
+    let _ = writeln!(s, "## Equipped (on disk)\n");
+    let Some(dir) = skills_dir.filter(|d| d.is_dir()) else {
+        let _ = writeln!(
+            s,
+            "_no `skills/` yet_ — run `agal skills sync` (default: **core**).\n"
+        );
+        return;
+    };
+    let index = index_skill_files(dir);
+    if index.is_empty() {
+        let _ = writeln!(
+            s,
+            "_`skills/` empty_ — run `agal skills sync` (default: **core**).\n"
+        );
+        return;
+    }
+
+    // Group dirs: 00-core, 01-policy, … → short names for humans.
+    let mut groups: BTreeSet<String> = BTreeSet::new();
+    for e in &index {
+        if let Some(g) = e.rel_path.strip_prefix("skills/") {
+            let group = g.split('/').next().unwrap_or(g);
+            groups.insert(skill_group_short(group).to_string());
+        }
+    }
+    let group_list = groups.into_iter().collect::<Vec<_>>().join(", ");
+    let _ = writeln!(
+        s,
+        "**{n}** skill file(s) · groups: **{groups}**  \n\
+         Catalog + full index below. Sync more: `agal skills sync --only …`.\n",
+        n = index.len(),
+        groups = group_list,
+    );
+}
+
+fn skill_group_short(dir: &str) -> &str {
+    match dir {
+        "00-core" => "core",
+        "01-policy" => "policy",
+        "02-frameworks" => "frameworks",
+        "03-formats" => "formats",
+        "04-ui" => "ui",
+        "05-migrations" => "migrations",
+        "06-agents" => "agents",
+        other => other,
+    }
+}
+
+fn truncate_line(s: &str, max: usize) -> String {
+    let mut out: String = s.chars().take(max).collect();
+    if s.chars().count() > max {
+        out.push('…');
+    }
+    out
+}
+
+fn short_node(id: &str) -> String {
+    id.trim_start_matches("plugins/")
+        .trim_start_matches("crates/")
+        .to_string()
 }
 
 fn write_skills_section_compact(s: &mut String, skills_dir: Option<&Path>) {
@@ -837,6 +962,8 @@ fn short_id(id: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{parse_skill_frontmatter, render_agal_md};
+    use crate::findings::{Finding, Severity};
+    use crate::Audiolabs;
 
     #[test]
     fn frontmatter_id_and_summary() {
@@ -890,6 +1017,75 @@ verify: review process() for alloc/lock\n\
         assert!(md.contains("Disclosure"));
         assert!(md.contains("**L3**"));
         assert!(md.contains("**L0**"));
+        assert!(md.contains("Equipped (on disk)"));
+        assert!(md.contains("no `skills/` yet") || md.contains("Equipped"));
+        assert!(md.contains("clap-validator validate"));
+        assert!(md.contains("notes/_workspace.md"));
+    }
+
+    #[test]
+    fn agal_md_focus_strip_when_blocked() {
+        let g = Audiolabs {
+            version: "0.0.0".into(),
+            generated_at: "t".into(),
+            project_root: ".".into(),
+            project_name: "t".into(),
+            used_frameworks: vec![],
+            frameworks: vec![],
+            nodes: vec![],
+            edges: vec![],
+            findings: vec![
+                Finding::new(Severity::Error, "migration_legacy", "still on old editor")
+                    .with_path("plugins/x")
+                    .with_fix("migrate to new editor"),
+                Finding::new(Severity::Warn, "large_param_surface", "many params"),
+                Finding::new(Severity::Info, "tool_hint_clippy", "run clippy"),
+            ],
+            findings_suppressed: 0,
+            migration_summary: crate::MigrationSummary {
+                total_plugins: 0,
+                total_legacy: 0,
+                total_migrated: 0,
+                migrations: Default::default(),
+            },
+            rules: Default::default(),
+            delta: None,
+        };
+        let md = render_agal_md(Some(&g), None, "audiolabs");
+        assert!(md.contains("## Focus (health = **blocked**)"));
+        assert!(md.contains("migration_legacy"));
+        assert!(md.contains("large_param_surface"));
+        assert!(!md.contains("tool_hint_clippy") || md.find("## Focus").is_some());
+        // info must not appear in focus strip lines
+        let focus = md
+            .split("## Focus")
+            .nth(1)
+            .and_then(|r| r.split("## ").next())
+            .unwrap_or("");
+        assert!(!focus.contains("tool_hint_clippy"));
+    }
+
+    #[test]
+    fn agal_md_equipped_lists_groups() {
+        let dir = std::env::temp_dir().join(format!(
+            "agal_skills_test_{}",
+            std::process::id()
+        ));
+        let core = dir.join("00-core");
+        std::fs::create_dir_all(&core).unwrap();
+        std::fs::write(
+            core.join("dsp-realtime.md"),
+            "---\nid: dsp-realtime\nsummary: rt\n---\n# RT\n",
+        )
+        .unwrap();
+        let md = render_agal_md(None, Some(dir.as_path()), "audiolabs");
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(md.contains("Equipped (on disk)"));
+        assert!(md.contains("skill file(s)"));
+        assert!(
+            md.contains("groups: **core**") || md.contains("**core**"),
+            "expected core group in equipped: {md}"
+        );
     }
 }
 

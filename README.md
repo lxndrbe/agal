@@ -80,11 +80,12 @@ agal doctor                   # Clippy + clap-validator + optional symbol tools 
 
 | Layer | Artifact |
 |-------|----------|
-| **L3** | `audiolabs/AGAL.md` — entry, budget, loadouts, skills index |
+| **L3** | `audiolabs/AGAL.md` — entry, focus strip, equipped skills, budget, loadouts |
 | **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
 | **L1** | `notes/<focus>.md` — one note; scan `[ATOM]` first |
 | **L0** | slice / `audiolabs.json` — escalate only |
 | loadout | ≤1 skill (match `triggers`) |
+| durable | `notes/_workspace.md` — never overwritten |
 
 1. **L3** `AGAL.md`
 2. **L2** `audiolabs.agent.md` — **health** (`ok` / `degraded` / `blocked`)

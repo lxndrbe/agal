@@ -6,6 +6,14 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
+## [0.5.2] — 2026-08-05
+
+### Added
+- **Equipped (on disk)** in `AGAL.md` — group names + skill file count after generate/skills sync
+- **Focus strip** in `AGAL.md` when health ≠ ok — top error/warn findings with path + fix (max 8)
+- **Loadout verify column** — clippy / clap-validator commands where applicable
+- **`notes/_workspace.md`** — durable workspace memory; seeded once, never overwritten
+
 ## [0.5.1] — 2026-08-05
 
 ### Added

@@ -184,6 +184,36 @@ fn notes_preserve_human_body() {
 }
 
 #[test]
+fn notes_workspace_memory_seeded_once() {
+    let root = fixture_root();
+    let out = root.join("_test_workspace_note");
+    let _ = std::fs::remove_dir_all(&out);
+    let opts = GenerateOptions {
+        output_dir_override: Some("_test_workspace_note".into()),
+        agent_only: true,
+        ..Default::default()
+    };
+    generate(&root, &opts).expect("gen1");
+    let ws = out.join("notes/_workspace.md");
+    assert!(ws.is_file(), "expected _workspace.md seed");
+    let mut body = std::fs::read_to_string(&ws).unwrap();
+    body.push_str("\nKEEP_WORKSPACE_LINE\n");
+    std::fs::write(&ws, &body).unwrap();
+
+    generate(&root, &opts).expect("gen2");
+    let body2 = std::fs::read_to_string(&ws).unwrap();
+    assert!(
+        body2.contains("KEEP_WORKSPACE_LINE"),
+        "_workspace.md must not be overwritten:\n{body2}"
+    );
+
+    let index = std::fs::read_to_string(out.join("notes/_index.md")).unwrap();
+    assert!(index.contains("_workspace.md"));
+
+    let _ = std::fs::remove_dir_all(&out);
+}
+
+#[test]
 fn notes_include_graph_atoms() {
     let root = fixture_root();
     let out = root.join("_test_notes_atoms");
