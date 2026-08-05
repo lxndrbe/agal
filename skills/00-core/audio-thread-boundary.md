@@ -1,4 +1,9 @@
 ---
+id: audio-thread-boundary
+group: core
+summary: What runs on audio vs UI/main; lock-free messaging ownership.
+triggers: thread boundary, UI audio, SPSC, atomics, shared state
+verify: checklist — shared values are atomic or queue; no &mut DSP from UI
 source: global
 copied_by: template
 date: 2026-07-30

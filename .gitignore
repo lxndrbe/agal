@@ -8,3 +8,6 @@
 
 # test fixture outputs
 crates/core/tests/fixtures/**/_test_*/
+
+# private agent identity (email, tokens, machine paths)
+/AGENTS.local.md

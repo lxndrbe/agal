@@ -182,3 +182,52 @@ fn notes_preserve_human_body() {
 
     let _ = std::fs::remove_dir_all(&out);
 }
+
+#[test]
+fn notes_include_graph_atoms() {
+    let root = fixture_root();
+    let out = root.join("_test_notes_atoms");
+    let _ = std::fs::remove_dir_all(&out);
+    let opts = GenerateOptions {
+        output_dir_override: Some("_test_notes_atoms".into()),
+        agent_only: true,
+        ..Default::default()
+    };
+    generate(&root, &opts).expect("gen");
+
+    let demo = std::fs::read_to_string(out.join("notes/demo.md")).expect("demo note");
+    assert!(
+        demo.contains("## Graph atoms (auto)"),
+        "missing graph atoms section:\n{demo}"
+    );
+    assert!(
+        demo.contains("[ATOM] type=fact | detail=kind=plugin"),
+        "missing kind atom:\n{demo}"
+    );
+    assert!(
+        demo.contains("depends_on=shared") || demo.contains("[ATOM] type=fact | detail=depends_on="),
+        "expected workspace dep atom:\n{demo}"
+    );
+    // info tool hints must not appear inside the graph-atoms fence (error/warn only)
+    let atoms_block = demo
+        .split("## Graph atoms (auto)")
+        .nth(1)
+        .and_then(|rest| rest.split("```").nth(1))
+        .expect("atoms fenced block");
+    assert!(
+        !atoms_block.contains("tool_hint"),
+        "info findings leaked into graph atoms:\n{atoms_block}"
+    );
+
+    let legacy = std::fs::read_to_string(out.join("notes/legacy_ed.md")).expect("legacy note");
+    assert!(
+        legacy.contains("migration=legacy") || legacy.contains("migration_legacy"),
+        "legacy plugin should surface migration constraint:\n{legacy}"
+    );
+    assert!(
+        legacy.contains("[ATOM] type=constraint"),
+        "expected constraint atom:\n{legacy}"
+    );
+
+    let _ = std::fs::remove_dir_all(&out);
+}

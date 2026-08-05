@@ -21,7 +21,7 @@ pub mod registry;
 pub mod skills;
 pub mod tool_hints;
 
-const AUDIOLABS_VERSION: &str = "0.4.1";
+const AUDIOLABS_VERSION: &str = env!("CARGO_PKG_VERSION");
 const DEFAULT_OUTPUT_DIR: &str = "audiolabs";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

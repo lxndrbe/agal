@@ -2,6 +2,8 @@
 id: ponytail
 group: policy
 summary: Minimal correct change; YAGNI; root cause; fewest files.
+triggers: edit, refactor, YAGNI, over-engineer, dependency
+verify: fewest files; no new dep without need; root-cause bugfix
 ---
 
 # Ponytail (policy)

@@ -1,4 +1,9 @@
 ---
+id: filter-biquad
+group: core
+summary: Stable IIR biquad design — pole radius, TDF-II, denormals.
+triggers: biquad, IIR, pole, coefficient, filter design
+verify: |pole| < 1; no trig in sample loop; denormal protection
 source: global
 copied_by: template
 date: 2026-07-29

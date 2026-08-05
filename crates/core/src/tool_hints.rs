@@ -1,7 +1,10 @@
-//! External tool hints (Clippy, clap-validator).
+//! External tool hints (Clippy, clap-validator, optional symbol tools).
 //!
 //! **Not** executed on `agal .` — only PATH probes + info findings with `fix` commands.
 //! Run tools yourself (or CI). Use `agal doctor` for a human checklist.
+//!
+//! Optional symbol/call-graph tools are **doctor-only** (no generate findings) —
+//! they complement agal, they do not replace it.
 
 use std::env;
 use std::path::{Path, PathBuf};
@@ -9,11 +12,20 @@ use std::path::{Path, PathBuf};
 use crate::Node;
 use crate::findings::{Finding, Severity};
 
+/// Binaries we recognize as optional code-intelligence tools (not required).
+const OPTIONAL_SYMBOL_TOOLS: &[&str] = &[
+    "codegraph",
+    "codebase-memory-mcp",
+    "graphify",
+];
+
 /// Result of probing common audio/Rust quality tools.
 #[derive(Debug, Clone)]
 pub struct ToolStatus {
     pub clippy: ToolProbe,
     pub clap_validator: ToolProbe,
+    /// Optional local symbol / call-graph tools (found or not — never required).
+    pub symbol_tools: Vec<ToolProbe>,
 }
 
 #[derive(Debug, Clone)]
@@ -34,12 +46,16 @@ impl ToolProbe {
     }
 }
 
-/// Check whether `cargo-clippy` and `clap-validator` are on PATH.
+/// Check whether `cargo-clippy`, `clap-validator`, and optional symbol tools are on PATH.
 pub fn probe_tools() -> ToolStatus {
     ToolStatus {
         // `cargo clippy` is provided by the `cargo-clippy` binary.
         clippy: ToolProbe::probe("cargo-clippy"),
         clap_validator: ToolProbe::probe("clap-validator"),
+        symbol_tools: OPTIONAL_SYMBOL_TOOLS
+            .iter()
+            .map(|n| ToolProbe::probe(n))
+            .collect(),
     }
 }
 
@@ -123,7 +139,7 @@ pub fn render_doctor(project_root: &Path, nodes: &[Node], status: &ToolStatus) -
     let _ = writeln!(s, "# agal doctor\n");
     let _ = writeln!(s, "project: `{}`\n", project_root.display());
 
-    let _ = writeln!(s, "## external tools\n");
+    let _ = writeln!(s, "## external tools (required quality stack)\n");
     for p in [&status.clippy, &status.clap_validator] {
         if p.found {
             let path = p
@@ -135,6 +151,36 @@ pub fn render_doctor(project_root: &Path, nodes: &[Node], status: &ToolStatus) -
         } else {
             let _ = writeln!(s, "- **{}**: missing on PATH", p.name);
         }
+    }
+
+    let _ = writeln!(
+        s,
+        "\n## optional symbol / call-graph tools\n\n\
+         agal is the **structure** layer (map, health, notes, skills).  \n\
+         These tools answer callers / impact / symbols — use when needed, not as a substitute for `AGAL.md`.\n"
+    );
+    let any_symbol = status.symbol_tools.iter().any(|p| p.found);
+    for p in &status.symbol_tools {
+        if p.found {
+            let path = p
+                .path
+                .as_ref()
+                .map(|x| x.display().to_string())
+                .unwrap_or_else(|| "?".into());
+            let _ = writeln!(s, "- **{}**: found — `{}`", p.name, path);
+        } else {
+            let _ = writeln!(s, "- **{}**: not on PATH", p.name);
+        }
+    }
+    if !any_symbol {
+        let _ = writeln!(
+            s,
+            "\n_None found — fine. Install only if you want local call-graph / symbol queries \
+             (e.g. [codegraph](https://github.com/colbymchenry/codegraph), \
+             [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp))._\n"
+        );
+    } else {
+        let _ = writeln!(s);
     }
 
     let _ = writeln!(s, "\n## recommended commands\n");
@@ -194,10 +240,11 @@ pub fn render_doctor(project_root: &Path, nodes: &[Node], status: &ToolStatus) -
     let _ = writeln!(
         s,
         "## note\n\
-         Graph findings = structure (migration, params, IPC).  \n\
-         Clippy = Rust lints.  \n\
-         clap-validator = CLAP ABI/spec on the **binary**.  \n\
-         Three different layers — hints only appear as **info** findings on generate.\n"
+         **agal** = structure (migration, params, IPC, health).  \n\
+         **Clippy** = Rust lints.  \n\
+         **clap-validator** = CLAP ABI/spec on the **binary**.  \n\
+         **codegraph / codebase-memory / …** = optional symbols & impact (not agal).  \n\
+         Clippy + clap-validator hints appear as **info** findings on generate; symbol tools are doctor-only.\n"
     );
     s
 }
@@ -234,6 +281,40 @@ mod tests {
         // We only assert structure; PATH content varies by machine.
         assert_eq!(s.clippy.name, "cargo-clippy");
         assert_eq!(s.clap_validator.name, "clap-validator");
+        assert_eq!(s.symbol_tools.len(), OPTIONAL_SYMBOL_TOOLS.len());
+        assert!(s.symbol_tools.iter().any(|p| p.name == "codegraph"));
+    }
+
+    #[test]
+    fn doctor_mentions_symbol_tools_section() {
+        let status = ToolStatus {
+            clippy: ToolProbe {
+                name: "cargo-clippy",
+                found: false,
+                path: None,
+            },
+            clap_validator: ToolProbe {
+                name: "clap-validator",
+                found: false,
+                path: None,
+            },
+            symbol_tools: vec![ToolProbe {
+                name: "codegraph",
+                found: false,
+                path: None,
+            }],
+        };
+        let report = render_doctor(Path::new("."), &[], &status);
+        assert!(report.contains("optional symbol"));
+        assert!(report.contains("codegraph"));
+        assert!(report.contains("not on PATH"));
+    }
+
+    #[test]
+    fn append_hints_does_not_emit_symbol_tool_findings() {
+        let mut out = Vec::new();
+        append_hints(&[], &mut out);
+        assert!(out.iter().all(|f| !f.code.contains("symbol") && !f.code.contains("codegraph")));
     }
 
     #[test]

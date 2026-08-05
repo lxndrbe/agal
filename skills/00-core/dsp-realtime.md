@@ -1,4 +1,9 @@
 ---
+id: dsp-realtime
+group: core
+summary: Hard realtime constraints for process() / audio callbacks.
+triggers: process, realtime, audio callback, xrun, alloc
+verify: review process() for alloc/lock/io; prefer alloc-counting test under load
 source: global
 copied_by: template
 date: 2026-07-30

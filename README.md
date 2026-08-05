@@ -71,18 +71,33 @@ agal skills sync --only ui/slint
 agal skills sync --only core,ui/slint,formats/clap
 agal skills sync --only all --force
 
-agal doctor                   # Clippy + clap-validator on PATH (not executed)
+agal doctor                   # Clippy + clap-validator + optional symbol tools on PATH
 ```
 
 ### Agent hot path
 
-1. **`audiolabs/AGAL.md`** — orientation home + skills index
-2. `audiolabs.agent.md` — structural map + **health** (`ok` / `degraded` / `blocked`)
+**Disclosure (L3→L0):** open the next layer only if the current one is not enough.
+
+| Layer | Artifact |
+|-------|----------|
+| **L3** | `audiolabs/AGAL.md` — entry, budget, loadouts, skills index |
+| **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
+| **L1** | `notes/<focus>.md` — one note; scan `[ATOM]` first |
+| **L0** | slice / `audiolabs.json` — escalate only |
+| loadout | ≤1 skill (match `triggers`) |
+
+1. **L3** `AGAL.md`
+2. **L2** `audiolabs.agent.md` — **health** (`ok` / `degraded` / `blocked`)
 3. If **blocked** → fix **error** findings first (`path` + `fix`)
-4. `audiolabs.delta.md`
-5. `notes/<focus>.md` (one plugin or crate)
-6. Skills on demand from pack list in `AGAL.md` (`00-core`, `ui/slint`, …)
-7. Slice / `audiolabs.json` only when escalating (info findings live here)
+4. **L2** `audiolabs.delta.md`
+5. **L1** `notes/<focus>.md` (**one** plugin or crate)
+6. **loadout** from pack list in `AGAL.md` — **≤1** skill file default
+7. **L0** slice / `audiolabs.json` only when escalating
+
+**Per-turn budget:** 1 focus note · ≤1 skill file · errors before warns · JSON only when escalating.  
+**Loadouts** (sync once): `core` · `policy` · `core,ui/slint` · `core,formats/clap` · `agents` — full table in `AGAL.md`.  
+**Stack:** agal (structure) · Clippy · clap-validator · optional symbol tools (not agal).  
+**Notes atoms:** graph atoms (auto, in note AUTO block) + optional human `[ATOM]` below HUMAN marker.
 
 ### Root `AGENTS.md` (yours) vs `AGAL.md` (agal)
 
@@ -137,7 +152,7 @@ Optional: version adapted skill packs while keeping graph/notes local:
 - **AST:** PluginLogic, Params, process/editor hooks, framework macros
 - **Integrity:** missing workspace members, packages outside workspace, required deps
 - **Findings** with optional `path` + `fix`; **suppress** via config
-- **Tool hints** (info): Clippy, clap-validator — not executed on generate
+- **Tool hints** (info): Clippy, clap-validator — not executed on generate; optional symbol tools are doctor-only
 
 ## Configuration (`agal.toml`)
 

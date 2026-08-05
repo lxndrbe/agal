@@ -2,6 +2,8 @@
 id: caveman
 group: policy
 summary: Dense agent communication; cut filler, keep technical precision.
+triggers: terse, tokens, agent chat, fluff
+verify: no ceremonial openers; code/paths exact; security still full prose
 ---
 
 # Caveman (policy)

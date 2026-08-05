@@ -62,13 +62,18 @@ Writes to `<workspace>/audiolabs/skills/` and refreshes **`audiolabs/AGAL.md`**
 
 ## Agent read order
 
-1. `audiolabs/AGAL.md` (skills + orientation home)
-2. `audiolabs.agent.md` (map + health)
-3. `audiolabs.delta.md` if present
-4. `audiolabs/notes/<focus>.md`
-5. Core skills if synced (`00-core/`)
+**Disclosure:** L3 `AGAL.md` → L2 map (+ delta) → L1 one note → L0 slice/json.  
+Next layer only if current is not enough.
+
+1. **L3** `audiolabs/AGAL.md` (skills + budget / loadouts / stack / disclosure)
+2. **L2** `audiolabs.agent.md` (map + health)
+3. **L2** `audiolabs.delta.md` if present
+4. **L1** `audiolabs/notes/<focus>.md` (**one** note; scan `[ATOM]` first)
+5. **loadout** — core skills if synced (`00-core/`) — **≤1** skill file default
 6. Other packs when the task needs them (`ui/slint`, formats, …)
-7. JSON / slice escalate
+7. **L0** JSON / slice escalate
+
+**Budget:** 1 note · ≤1 skill · errors before warns. Full tables live in `AGAL.md` after generate.
 
 ## Workspace root
 

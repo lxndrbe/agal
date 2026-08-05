@@ -213,13 +213,16 @@ pub fn render_agent_md(graph: &Audiolabs, skills_dir: Option<&Path>) -> String {
     let _ = writeln!(
         s,
         "## read order\n\
-         1. **`AGAL.md`** (orientation home — skills + hot path).  \n\
-         2. **this file** (structural map + health).  \n\
+         Disclosure: **L3** `AGAL.md` → **L2** this file (+ delta) → **L1** one note → **L0** slice/json.  \n\
+         Open the next layer only if the current one is not enough.\n\
+         \n\
+         1. **L3** **`AGAL.md`** (orientation — skills + budget / loadouts / disclosure).  \n\
+         2. **L2** **this file** (structural map + health).  \n\
          3. If health is **blocked**, fix error findings first (path + fix fields).  \n\
-         4. **`audiolabs.delta.md`** if present.  \n\
-         5. **`notes/<focus>.md`** for the plugin/crate you touch.  \n\
-         6. **skills** on demand from the pack list in `AGAL.md` (never dump all).  \n\
-         7. Escalate: `agal --plugin NAME .` slice, or `audiolabs.json` for params/edges/info findings.  \n\
+         4. **L2** **`audiolabs.delta.md`** if present.  \n\
+         5. **L1** **`notes/<focus>.md`** (**one** note; scan `[ATOM]` first).  \n\
+         6. **loadout** — skills on demand from `AGAL.md` (never dump all; **≤1** skill file).  \n\
+         7. **L0** escalate: `agal --plugin NAME .` slice, or `audiolabs.json`.  \n\
          8. HTML is for humans (overview); agents prefer md/json.  \n\
          \n\
          Skills are **not** auto-copied on generate — `agal skills sync` (default: **core** only).  \n\
@@ -306,15 +309,78 @@ pub fn render_agal_md(
 
     let _ = writeln!(
         s,
+        "## Disclosure (read layers)\n\n\
+         Progressive disclosure — open the **next** layer only if the current one is not enough:\n\n\
+         | Layer | Artifact | Open when |\n\
+         |-------|----------|----------|\n\
+         | **L3** entry | **this file** (`AGAL.md`) | always first — budget, loadouts, skills index |\n\
+         | **L2** map | `audiolabs.agent.md` (+ `delta` if present) | need structure / health / what changed |\n\
+         | **L1** focus | `notes/<focus>.md` (scan **`[ATOM]`** first) | work on one plugin/crate |\n\
+         | **L0** raw | `*.slice.json` / `audiolabs.json` | map + note still insufficient |\n\n\
+         Skills are a **side loadout** (≤1 file), not a layer — use `triggers` in the index.  \n\
+         HTML / Cheatsheet = humans. Do **not** skip to L0 by default.\n"
+    );
+
+    let _ = writeln!(
+        s,
         "## Hot path\n\n\
-         1. **this file** (`AGAL.md`) — skills index + orientation  \n\
-         2. **`audiolabs.agent.md`** — structural map + health detail  \n\
+         1. **L3** — this file (`AGAL.md`)  \n\
+         2. **L2** — `audiolabs.agent.md` (structural map + health)  \n\
          3. If **blocked** — fix error findings first (`path` + `fix`)  \n\
-         4. **`audiolabs.delta.md`** if present  \n\
-         5. **`notes/<focus>.md`** for the plugin/crate you touch  \n\
-         6. **skills** on demand (list below) — never dump the whole tree  \n\
-         7. Escalate: `agal --plugin NAME .` → slice, or `audiolabs.json`  \n\
+         4. **L2** — `audiolabs.delta.md` if present  \n\
+         5. **L1** — `notes/<focus>.md` (atoms → open → intent)  \n\
+         6. **loadout** — one skill from the pack list below (match `triggers`)  \n\
+         7. **L0** escalate — `agal --plugin NAME .` slice, or `audiolabs.json`  \n\
          8. HTML / Cheatsheet are for humans\n"
+    );
+
+    let _ = writeln!(
+        s,
+        "## Context budget (per turn)\n\n\
+         Keep context small. Default caps:\n\n\
+         | Cap | Default |\n\
+         |-----|--------|\n\
+         | focus notes | **1** (`notes/<focus>.md`) |\n\
+         | skill files loaded | **1** (or one loadout row) |\n\
+         | findings to act on | **errors first**, then warns; skip info until escalate |\n\
+         | JSON / slice | only after map + note are not enough |\n\n\
+         Do **not** dump `skills/`, full `audiolabs.json`, or every note.\n"
+    );
+
+    let _ = writeln!(
+        s,
+        "## Task loadouts\n\n\
+         Sync once, then load **only** what the task needs:\n\n\
+         | Task | `agal skills sync --only …` | Load in context |\n\
+         |------|-----------------------------|-----------------|\n\
+         | DSP / process / realtime | `core` (default) | `00-core/*` as needed |\n\
+         | Policy / terse edits | `policy` | `caveman` **or** `ponytail` |\n\
+         | Slint UI | `core,ui/slint` | `slint` (+ core if DSP) |\n\
+         | CLAP ship / formats | `core,formats/clap` | `clap` |\n\
+         | Agent orientation playbook | `agents` | `agent-usage` |\n\
+         | Full pack | `all` | rare — context bloat |\n"
+    );
+
+    let _ = writeln!(
+        s,
+        "## Stack layers\n\n\
+         | Layer | Tool | Role |\n\
+         |-------|------|------|\n\
+         | **structure** | **agal** | map, health, notes, curated skills |\n\
+         | **Rust lint** | Clippy | `agal doctor` + CI — not run by generate |\n\
+         | **CLAP binary** | clap-validator | same |\n\
+         | **symbols / call graph** | optional (codegraph, codebase-memory, graphify, …) | not agal — use when you need callers/impact |\n"
+    );
+
+    let _ = writeln!(
+        s,
+        "## Notes atoms\n\n\
+         **Graph atoms (auto)** — inside each note's AUTO block: migration, frameworks, key edges, \
+         error/warn findings as `[ATOM]` lines (regenerated; max 12). Scan these first at L1.\n\n\
+         **Human atoms (optional)** — below the HUMAN marker for durable decisions/lessons:\n\n\
+         ```text\n\
+         [ATOM] type=decision|lesson|constraint | detail=…\n\
+         ```\n"
     );
 
     if let Some(g) = graph {
@@ -349,7 +415,7 @@ pub fn render_agal_md(
          agal skills sync --only ui/slint    # single pack file\n\
          agal skills sync --only policy,agents\n\
          agal skills list\n\
-         agal doctor                         # Clippy + clap-validator on PATH\n\
+         agal doctor                         # Clippy + clap-validator + optional symbol tools\n\
          ```\n"
     );
 
@@ -471,7 +537,7 @@ fn write_skills_packs_and_index(s: &mut String, skills_dir: Option<&Path>) {
          - **Load on demand** — never dump `skills/` into context.\n\
          - Without `--force`, existing files are **skipped** (local edits kept).\n\
          - Prefer adapting pack files in place; do **not** invent root `*_SKILL.md`.\n\
-         - Optional frontmatter: `id`, `summary` (≤120 chars), `adapted: true`.\n"
+         - Optional frontmatter: `id`, `summary` (≤120 chars), `triggers`, `verify`, `adapted: true`.\n"
     );
 
     let Some(dir) = skills_dir.filter(|d| d.is_dir()) else {
@@ -496,6 +562,16 @@ fn write_skills_packs_and_index(s: &mut String, skills_dir: Option<&Path>) {
             "- **{}** — {} · [`{}`](./{})",
             entry.id, entry.summary, entry.rel_path, entry.rel_path
         );
+        let mut meta = Vec::new();
+        if let Some(t) = &entry.triggers {
+            meta.push(format!("triggers: {t}"));
+        }
+        if let Some(v) = &entry.verify {
+            meta.push(format!("verify: {v}"));
+        }
+        if !meta.is_empty() {
+            let _ = writeln!(s, "  · {}", meta.join(" · "));
+        }
     }
     let _ = writeln!(s);
 }
@@ -505,6 +581,8 @@ struct SkillIndexEntry {
     id: String,
     summary: String,
     rel_path: String,
+    triggers: Option<String>,
+    verify: Option<String>,
 }
 
 fn index_skill_files(skills_dir: &Path) -> Vec<SkillIndexEntry> {
@@ -531,25 +609,38 @@ fn index_skill_files(skills_dir: &Path) -> Vec<SkillIndexEntry> {
         let Ok(text) = fs::read_to_string(path) else {
             continue;
         };
-        let (id, summary) = parse_skill_frontmatter(&text, &rel_str);
+        let fm = parse_skill_frontmatter(&text, &rel_str);
         out.push(SkillIndexEntry {
-            id,
-            summary,
+            id: fm.id,
+            summary: fm.summary,
             rel_path: format!("skills/{}", rel_str),
+            triggers: fm.triggers,
+            verify: fm.verify,
         });
     }
     out.sort_by(|a, b| a.rel_path.cmp(&b.rel_path));
     out
 }
 
-/// Parse YAML-ish frontmatter `id` + `summary`; fallback from path/title.
-fn parse_skill_frontmatter(text: &str, rel_path: &str) -> (String, String) {
+/// Parsed skill frontmatter (YAML-ish between `---` fences).
+#[derive(Debug, Clone)]
+struct SkillFrontmatter {
+    id: String,
+    summary: String,
+    triggers: Option<String>,
+    verify: Option<String>,
+}
+
+/// Parse YAML-ish frontmatter; fallback id/summary from path/title.
+fn parse_skill_frontmatter(text: &str, rel_path: &str) -> SkillFrontmatter {
     let fallback_id = Path::new(rel_path)
         .file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_else(|| rel_path.to_string());
     let mut id = fallback_id.clone();
     let mut summary = String::new();
+    let mut triggers: Option<String> = None;
+    let mut verify: Option<String> = None;
 
     let trimmed = text.trim_start();
     if let Some(rest) = trimmed.strip_prefix("---") {
@@ -566,6 +657,14 @@ fn parse_skill_frontmatter(text: &str, rel_path: &str) -> (String, String) {
                     let v = v.trim().trim_matches('"').trim_matches('\'');
                     if !v.is_empty() {
                         summary = v.to_string();
+                    }
+                } else if let Some(v) = line.strip_prefix("triggers:") {
+                    if let Some(t) = normalize_fm_list(v) {
+                        triggers = Some(t);
+                    }
+                } else if let Some(v) = line.strip_prefix("verify:") {
+                    if let Some(t) = normalize_fm_list(v) {
+                        verify = Some(t);
                     }
                 }
             }
@@ -589,7 +688,40 @@ fn parse_skill_frontmatter(text: &str, rel_path: &str) -> (String, String) {
         summary.truncate(117);
         summary.push_str("...");
     }
-    (id, summary)
+    SkillFrontmatter {
+        id,
+        summary,
+        triggers,
+        verify,
+    }
+}
+
+/// Normalize `a, b` or `["a", "b"]` / `['a']` into a short comma-separated string.
+fn normalize_fm_list(raw: &str) -> Option<String> {
+    let mut v = raw.trim().trim_matches('"').trim_matches('\'').to_string();
+    if v.starts_with('[') && v.ends_with(']') {
+        v = v[1..v.len() - 1].to_string();
+    }
+    let parts: Vec<String> = v
+        .split(',')
+        .map(|p| {
+            p.trim()
+                .trim_matches('"')
+                .trim_matches('\'')
+                .trim()
+                .to_string()
+        })
+        .filter(|p| !p.is_empty())
+        .collect();
+    if parts.is_empty() {
+        return None;
+    }
+    let mut joined = parts.join(", ");
+    if joined.len() > 160 {
+        joined.truncate(157);
+        joined.push_str("...");
+    }
+    Some(joined)
 }
 
 fn plugin_line(n: &Node) -> String {
@@ -709,16 +841,38 @@ mod tests {
     #[test]
     fn frontmatter_id_and_summary() {
         let text = "---\nid: slint-lx\ngroup: ui\nsource: workspace\nsummary: hello world skill\n---\n\n# Title\n";
-        let (id, summary) = parse_skill_frontmatter(text, "04-ui/slint.md");
-        assert_eq!(id, "slint-lx");
-        assert_eq!(summary, "hello world skill");
+        let fm = parse_skill_frontmatter(text, "04-ui/slint.md");
+        assert_eq!(fm.id, "slint-lx");
+        assert_eq!(fm.summary, "hello world skill");
+        assert!(fm.triggers.is_none());
+        assert!(fm.verify.is_none());
+    }
+
+    #[test]
+    fn frontmatter_triggers_and_verify() {
+        let text = "---\n\
+id: dsp-realtime\n\
+summary: RT rules\n\
+triggers: [process, realtime, \"audio callback\"]\n\
+verify: review process() for alloc/lock\n\
+---\n\n# DSP\n";
+        let fm = parse_skill_frontmatter(text, "00-core/dsp-realtime.md");
+        assert_eq!(fm.id, "dsp-realtime");
+        assert_eq!(
+            fm.triggers.as_deref(),
+            Some("process, realtime, audio callback")
+        );
+        assert_eq!(
+            fm.verify.as_deref(),
+            Some("review process() for alloc/lock")
+        );
     }
 
     #[test]
     fn frontmatter_fallback_from_path() {
-        let (id, summary) = parse_skill_frontmatter("# Only heading\n", "04-ui/slint.md");
-        assert_eq!(id, "slint");
-        assert_eq!(summary, "Only heading");
+        let fm = parse_skill_frontmatter("# Only heading\n", "04-ui/slint.md");
+        assert_eq!(fm.id, "slint");
+        assert_eq!(fm.summary, "Only heading");
     }
 
     #[test]
@@ -729,6 +883,13 @@ mod tests {
         assert!(md.contains("04-ui"));
         assert!(!md.contains("10-lx"));
         assert!(!md.contains("90-project"));
+        assert!(md.contains("Context budget"));
+        assert!(md.contains("Task loadouts"));
+        assert!(md.contains("Stack layers"));
+        assert!(md.contains("[ATOM]"));
+        assert!(md.contains("Disclosure"));
+        assert!(md.contains("**L3**"));
+        assert!(md.contains("**L0**"));
     }
 }
 

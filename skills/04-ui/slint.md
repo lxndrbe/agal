@@ -1,4 +1,9 @@
 ---
+id: slint
+group: ui
+summary: Slint UI patterns for plugin editors — components, callbacks, host.
+triggers: slint, editor UI, .slint, widget, plugin GUI
+verify: editor logic off audio thread; param gestures via callbacks
 source: global
 copied_by: template
 date: 2026-07-29

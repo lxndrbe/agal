@@ -6,6 +6,25 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
+## [0.5.1] — 2026-08-05
+
+### Added
+- **Disclosure layers L3→L0** — progressive read model in `AGAL.md`, agent map hot path, Cheatsheet, agent-usage, README (next layer only if needed)
+- **Graph atoms in notes (AUTO)** — dense `[ATOM]` lines from scan (migration, frameworks, key edges, error/warn findings); max 12; human atoms stay below HUMAN; info tool-hints excluded from atoms
+- **`AGENTS.local.md`** (gitignored) — private commit identity; public `AGENTS.md` keeps no email; example: `AGENTS.local.md.example`
+
+### Changed
+- **Cheatsheet** — L1 = graph atoms first; mix-ups for hand-editing auto atoms; notes atom kinds table
+
+## [0.5.0] — 2026-08-05
+
+### Added
+- **Root `AGENTS.md`** (tool repo) — points agents at caveman + ponytail policy skills
+- **Agent context budget + task loadouts + stack layers** — regenerated into `AGAL.md` / Cheatsheet; mirrored in agent-usage skill + README
+- **Notes `[ATOM]` convention** — optional durable one-liners; empty-note seed includes an Atoms stub
+- **`agal doctor` optional symbol tools** — PATH probe for `codegraph`, `codebase-memory-mcp`, `graphify` (report only; no generate findings)
+- **Skill frontmatter `triggers` / `verify`** — parsed into `AGAL.md` skill index; core / policy / slint / clap / agent-usage packs filled in
+
 ## [0.4.2] — 2026-08-04
 
 ### Added

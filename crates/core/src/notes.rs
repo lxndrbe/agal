@@ -1,12 +1,18 @@
 //! Hybrid per-node notes: auto header regenerated; human body preserved.
+//!
+//! AUTO block includes **graph atoms** — dense `[ATOM]` lines derived from the
+//! scan (findings, edges, migration). Agents scan those first (L1 disclosure).
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::fs;
 use std::path::Path;
 
-use crate::findings::Finding;
+use crate::findings::{Finding, Severity};
 use crate::{Audiolabs, Edge, Node};
+
+/// Max auto graph atoms per note (token budget for L1).
+const MAX_GRAPH_ATOMS: usize = 12;
 
 const AUTO_START: &str = "<!-- AUDIOLABS:AUTO-START -->";
 const AUTO_END: &str = "<!-- AUDIOLABS:AUTO-END -->";
@@ -101,7 +107,14 @@ fn compose(auto: &str, human: Option<&str>) -> String {
         _ => {
             s.push_str("## Intent\n\n_Why this crate/plugin exists. Edit freely._\n\n");
             s.push_str("## Open\n\n- [ ] \n\n");
-            s.push_str("## Decisions\n\n_Architecture choices worth remembering._\n");
+            s.push_str("## Decisions\n\n_Architecture choices worth remembering._\n\n");
+            s.push_str("## Atoms (human)\n\n");
+            s.push_str(
+                "_Graph atoms live **above** in AUTO. Add durable decisions/lessons here:_\n\n",
+            );
+            s.push_str("```text\n");
+            s.push_str("[ATOM] type=decision|lesson|constraint | detail=…\n");
+            s.push_str("```\n");
         }
     }
     s
@@ -136,6 +149,9 @@ fn render_auto_section(
     }
     let _ = writeln!(s, "| generated | `{}` |", graph.generated_at);
     let _ = writeln!(s);
+
+    // L1 first: dense atoms agents scan before prose sections below.
+    s.push_str(&render_graph_atoms(n, graph, findings_by_node));
 
     if !n.internal_deps.is_empty() {
         let _ = writeln!(s, "## deps (workspace)");
@@ -280,12 +296,157 @@ fn render_auto_section(
     let _ = writeln!(
         s,
         "## agent focus\n\
-         Read this note after `audiolabs.agent.md`.  \n\
-         Escalate: `{}` in json / `agal --plugin {} .`\n",
+         **L1:** scan **Graph atoms** above first, then human body below HUMAN.  \n\
+         After `audiolabs.agent.md` (L2). Escalate L0: `{}` in json / `agal --plugin {} .`\n",
         n.id, n.name
     );
 
     s
+}
+
+/// Dense one-liners from the graph — regenerated; not human-edited.
+fn render_graph_atoms(
+    n: &Node,
+    graph: &Audiolabs,
+    findings_by_node: &BTreeMap<String, Vec<&Finding>>,
+) -> String {
+    let mut atoms: Vec<(&str, String)> = Vec::new();
+
+    atoms.push((
+        "fact",
+        format!("kind={} id={}", n.kind, sanitize_atom_detail(&n.id)),
+    ));
+
+    if !n.frameworks.is_empty() {
+        atoms.push((
+            "fact",
+            format!("frameworks={}", n.frameworks.join("+")),
+        ));
+    }
+
+    match n.migration_status.as_deref() {
+        Some("legacy") => atoms.push((
+            "constraint",
+            "migration=legacy — migrate before feature work".into(),
+        )),
+        Some("unknown") => atoms.push(("constraint", "migration=unknown".into())),
+        Some("migrated") => atoms.push(("fact", "migration=migrated".into())),
+        Some(other) => atoms.push(("fact", format!("migration={other}"))),
+        None => {}
+    }
+
+    if let Some(ast) = &n.ast_summary {
+        if !ast.plugin_formats.is_empty() {
+            let formats: Vec<_> = ast.plugin_formats.iter().cloned().collect();
+            atoms.push(("fact", format!("formats={}", formats.join("+"))));
+        }
+        let roles = ast.role_tags();
+        if !roles.is_empty() {
+            let roles: Vec<_> = roles.into_iter().collect();
+            atoms.push(("fact", format!("roles={}", roles.join("+"))));
+        }
+        if !ast.process_hooks.is_empty() || ast.process_method_count > 0 {
+            atoms.push(("fact", "has_process=true".into()));
+        }
+        if !ast.editor_functions.is_empty() {
+            atoms.push(("fact", "has_editor=true".into()));
+        }
+    }
+
+    // Semantic outbound (UI / IPC / runtime) — highest signal edges.
+    for e in graph.edges.iter().filter(|e| e.from == n.id) {
+        if matches!(
+            e.kind.as_str(),
+            "uses_ui" | "ipc_peer" | "runtime_depends_on"
+        ) {
+            atoms.push((
+                "fact",
+                format!("{}→{}", e.kind, short_id(&e.to)),
+            ));
+        }
+    }
+
+    // Workspace deps (cap) — who this node needs.
+    for d in n.internal_deps.iter().take(3) {
+        atoms.push(("fact", format!("depends_on={}", short_id(d))));
+    }
+
+    // Inbound blast radius (cap).
+    for e in graph.edges.iter().filter(|e| e.to == n.id).take(3) {
+        atoms.push((
+            "fact",
+            format!("used_by={} via {}", short_id(&e.from), e.kind),
+        ));
+    }
+
+    // Actionable findings only (error / warn). Info stays in full findings list.
+    if let Some(fs) = findings_by_node.get(&n.id) {
+        let mut actionable: Vec<&&Finding> = fs
+            .iter()
+            .filter(|f| matches!(f.severity, Severity::Error | Severity::Warn))
+            .collect();
+        actionable.sort_by_key(|f| match f.severity {
+            Severity::Error => 0u8,
+            Severity::Warn => 1,
+            Severity::Info => 2,
+        });
+        for f in actionable {
+            let mut detail = format!(
+                "[{}] {}: {}",
+                f.severity,
+                f.code,
+                truncate_chars(&f.message, 80)
+            );
+            if let Some(fix) = &f.fix {
+                detail.push_str(" | fix: ");
+                detail.push_str(&truncate_chars(fix, 60));
+            }
+            atoms.push(("constraint", sanitize_atom_detail(&detail)));
+        }
+    }
+
+    atoms.truncate(MAX_GRAPH_ATOMS);
+    if atoms.is_empty() {
+        return String::new();
+    }
+
+    let mut s = String::new();
+    let _ = writeln!(s, "## Graph atoms (auto)\n");
+    let _ = writeln!(
+        s,
+        "_Regenerated each `agal .`. Scan these first. Human atoms: below HUMAN marker._\n"
+    );
+    let _ = writeln!(s, "```text");
+    for (ty, detail) in &atoms {
+        let _ = writeln!(
+            s,
+            "[ATOM] type={} | detail={}",
+            ty,
+            sanitize_atom_detail(detail)
+        );
+    }
+    let _ = writeln!(s, "```\n");
+    s
+}
+
+fn truncate_chars(s: &str, max: usize) -> String {
+    let mut out: String = s.chars().take(max).collect();
+    if s.chars().count() > max {
+        out.push('…');
+    }
+    out
+}
+
+fn sanitize_atom_detail(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            '\n' | '\r' | '|' => ' ',
+            c => c,
+        })
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn write_index(notes_dir: &Path, graph: &Audiolabs) -> Result<(), String> {

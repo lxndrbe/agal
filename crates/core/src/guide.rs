@@ -55,7 +55,7 @@ agal .
 # Optional: focus one plugin (1-hop slice JSON)
 agal --plugin {example_plugin} .
 
-# PATH check: Clippy + clap-validator (not run by generate)
+# PATH check: Clippy + clap-validator (+ optional symbol tools; not run by generate)
 agal doctor
 
 # Pull skills once (live in the tool; not auto-copied on every generate)
@@ -127,11 +127,12 @@ Without `--force`, existing skill files are **skipped** (local edits kept).
 
 | Command | What it does |
 |---------|----------------|
-| `agal doctor` | PATH: **Clippy** + **clap-validator**; recommended commands |
+| `agal doctor` | PATH: **Clippy** + **clap-validator** + optional symbol tools |
 | `agal doctor .` | same with explicit root |
 
 Generate only adds **info** findings (`tool_hint_clippy`, `tool_hint_clap_validator`).  
-It does **not** run Clippy or validate built `.clap` files.
+It does **not** run Clippy or validate built `.clap` files.  
+Optional symbol tools (`codegraph`, `codebase-memory-mcp`, …) are **doctor-only** — no generate findings.
 
 ---
 
@@ -162,19 +163,66 @@ reason = "product surface intentional"
 
 1. `agal .` after larger code changes (or `--watch`)
 2. Open **[audiolabs.html](./audiolabs.html)** — plugins + hubs
-3. Edit **[notes/&lt;name&gt;.md](./notes/)** below the HUMAN marker (auto block is rewritten)
+3. Edit **[notes/&lt;name&gt;.md](./notes/)** **below** the HUMAN marker only (AUTO block + graph atoms are rewritten)
 4. `agal skills sync` once per machine/workspace when needed
 5. `agal doctor` before release-style validation
 
 ### AI agent (hot path — do not dump the whole folder)
 
-1. **`AGAL.md`** — orientation home + skills index
-2. `audiolabs.agent.md` — structural map + **health**
+**Disclosure:** open the **next** layer only if the current one is not enough.
+
+| Layer | Artifact |
+|-------|----------|
+| **L3** | `AGAL.md` — entry, budget, loadouts, skills index |
+| **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
+| **L1** | `notes/&lt;focus&gt;.md` — **graph atoms first**, then human body |
+| **L0** | slice / `audiolabs.json` — escalate only |
+| loadout | ≤1 skill file (match `triggers`) — not a layer |
+
+1. **L3** `AGAL.md`
+2. **L2** `audiolabs.agent.md` — structural map + **health**
 3. If **blocked**: fix error findings first (`path` + `fix`)
-4. `audiolabs.delta.md`
-5. `notes/&lt;focus&gt;.md` for the plugin/crate you touch
-6. Skills on demand from pack list in `AGAL.md` (`00-core` default, `ui/slint`, …)
-7. Escalate: slice / `audiolabs.json` (info findings live here)
+4. **L2** `audiolabs.delta.md` if present
+5. **L1** `notes/&lt;focus&gt;.md` (**one** note) — scan **Graph atoms (auto)** before prose
+6. **loadout** — skills on demand (`00-core` default, `ui/slint`, …) — **≤1** skill file
+7. **L0** escalate: slice / `audiolabs.json`
+
+### Context budget (per turn)
+
+| Cap | Default |
+|-----|---------|
+| focus notes | **1** |
+| skill files | **1** (or one loadout) |
+| findings | errors first, then warns; info only on escalate |
+| JSON / slice | only when map + note are not enough |
+
+### Task loadouts
+
+| Task | `agal skills sync --only …` |
+|------|-----------------------------|
+| DSP / realtime | `core` (default) |
+| Policy / terse edits | `policy` |
+| Slint UI | `core,ui/slint` |
+| CLAP / formats | `core,formats/clap` |
+| Agent playbook | `agents` |
+| Everything | `all` (rare) |
+
+### Stack layers
+
+**agal** (structure) · **Clippy** · **clap-validator** · optional symbol tools (codegraph / codebase-memory / graphify — not agal).
+
+### Notes atoms
+
+| Kind | Where | Source |
+|------|-------|--------|
+| **Graph atoms (auto)** | note AUTO block, fenced `[ATOM]` lines | scan: migration, frameworks, key edges, error/warn (max 12) |
+| **Human atoms** | below HUMAN marker | you / agent decisions & lessons |
+
+```text
+[ATOM] type=fact|constraint|decision|lesson | detail=…
+```
+
+Info findings (e.g. tool hints) stay in `## findings` — not in graph atoms.
 
 ### Skills layout (tool packs only)
 
@@ -201,10 +249,12 @@ Example: *“Continue on {example_plugin} — read AGAL.md + notes/{example_plug
 
 | Wrong / unclear | Right |
 |-----------------|--------|
-| **`agal .`** |
+| How do I regenerate the map? | **`agal .`** |
 | `agal update` | **`agal .`** (no `update` subcommand) |
 | Skills missing after generate | expected → **`agal skills sync`** |
 | Note text gone after generate | edit only **below** the HUMAN marker |
+| Graph atoms missing / stale | run **`agal .`** (AUTO regenerated) |
+| Edit graph atoms by hand | don't — they are rewritten; use human atoms instead |
 | Commit PM layer | prefer gitignoring `{out}/` |
 | agal should run Clippy/validator | **no** — `agal doctor` + info hints only |
 

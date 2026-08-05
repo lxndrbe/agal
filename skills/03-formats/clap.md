@@ -1,4 +1,9 @@
 ---
+id: clap
+group: formats
+summary: CLAP factory, features, main-thread host callbacks.
+triggers: CLAP, clap-validator, plugin factory, export
+verify: clap-validator on built .clap; features declared correctly
 source: global
 copied_by: template
 date: 2026-07-29
