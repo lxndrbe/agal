@@ -11,7 +11,7 @@ verify: L3→L2→L1→L0; 1 note · ≤1 skill · errors first; no skills/ dump
 **Summary:** Orientation layer for AI-assisted Rust audio work.  
 Start at **`AGAL.md`**, then the structural map. Skills load on purpose — not a dump.
 
-Product: **agentic-audiolab**, binary **`agal`**, folder **`audiolabs/`**.
+Product: **agentic-audiolab**, binary **`agal`**, folder **`agal/`**.
 
 ## Disclosure (read layers)
 
@@ -19,25 +19,25 @@ Progressive disclosure — open the **next** layer only if the current one is no
 
 | Layer | Artifact | Open when |
 |-------|----------|-----------|
-| **L3** entry | `audiolabs/AGAL.md` | always first — budget, loadouts, skills index |
-| **L2** map | `audiolabs.agent.md` (+ `delta`) | structure / health / what changed |
+| **L3** entry | `agal/AGAL.md` | always first — budget, loadouts, skills index |
+| **L2** map | `agal.agent.md` (+ `delta`) | structure / health / what changed |
 | **L1** focus | `notes/<focus>.md` (scan **`[ATOM]`** first) | work on one plugin/crate |
-| **L0** raw | `*.slice.json` / `audiolabs.json` | map + note still insufficient |
+| **L0** raw | `*.slice.json` / `agal.json` | map + note still insufficient |
 
 Skills are a **side loadout** (≤1 file; match `triggers`), not a layer.  
 HTML / Cheatsheet = humans. Do **not** skip to L0 by default.
 
 ## Read order (hot path)
 
-1. **L3** **`audiolabs/AGAL.md`** — entry: skills index + budget / loadouts / disclosure
-2. **L2** **`audiolabs/audiolabs.agent.md`** — structural map + **health** (`ok` / `degraded` / `blocked`)
+1. **L3** **`agal/AGAL.md`** — entry: skills index + budget / loadouts / disclosure
+2. **L2** **`agal/agal.agent.md`** — structural map + **health** (`ok` / `degraded` / `blocked`)
 3. If **blocked** — fix error findings first (`path` + `fix` on each line)
-4. **L2** **`audiolabs/audiolabs.delta.md`** — what changed since last generate
-5. **L1** **`audiolabs/notes/<focus>.md`** — **one** note; atoms → open → intent
+4. **L2** **`agal/agal.delta.md`** — what changed since last generate
+5. **L1** **`agal/notes/<focus>.md`** — **one** note; atoms → open → intent
 6. **loadout** — skills on demand from `AGAL.md` (never the whole tree; **≤1** skill file)
 7. **L0** escalate only if needed:
    - `agal --plugin <name> .` → `<name>.slice.json`
-   - `audiolabs.json` for params_fields / full edges / **info** findings
+   - `agal.json` for params_fields / full edges / **info** findings
 
 ## Context budget (per turn)
 
@@ -57,7 +57,7 @@ HTML / Cheatsheet = humans. Do **not** skip to L0 by default.
 ## Focus strip (L3)
 
 When health is **degraded** / **blocked**, `AGAL.md` lists top error/warn findings (path + fix).  
-Fix those first. Full list remains in `audiolabs.agent.md`.
+Fix those first. Full list remains in `agal.agent.md`.
 
 ## Task loadouts / presets
 
@@ -122,14 +122,14 @@ At **L1**, scan the ```text [ATOM] …``` block first, then the human body.
 | File | Who owns it |
 |------|-------------|
 | **`AGENTS.md`** (repo root) | **you** — product rules, commit policy, team notes |
-| **`audiolabs/AGAL.md`** | **agal** — regenerated; skills links + orientation |
+| **`agal/AGAL.md`** | **agal** — regenerated; skills links + orientation |
 
-Root `AGENTS.md` should **point** at `audiolabs/AGAL.md` and keep product rules.  
+Root `AGENTS.md` should **point** at `agal/AGAL.md` and keep product rules.  
 agal never overwrites root `AGENTS.md`.
 
 ## Skills (tool packs)
 
-- Live under **`audiolabs/skills/`** after `agal skills sync` (never repo-root `*_SKILL.md`).
+- Live under **`agal/skills/`** after `agal skills sync` (never repo-root `*_SKILL.md`).
 - Numbered groups: `00-core`, `01-policy`, `02-frameworks`, `03-formats`, `04-ui`, `05-migrations`, `06-agents`.
 - Selectors: `core`, `ui/slint`, `04-ui/slint`, mixes, `all`.
 - Without `--force`, existing files are **skipped** (local adaptations kept).
@@ -159,7 +159,7 @@ agal never overwrites root `AGENTS.md`.
 agal .                          # regenerate map + AGAL.md + notes headers + html
 agal --plugin aether .          # + one-hop slice
 agal doctor                     # Clippy + clap-validator PATH check
-agal skills sync                # core → audiolabs/skills/
+agal skills sync                # core → agal/skills/
 agal skills sync --only policy  # opt-in style skills
 agal skills sync --only ui/slint
 agal skills sync --only all     # full skill pack (rare)

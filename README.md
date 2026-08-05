@@ -9,7 +9,7 @@ hybrid notes, curated + workspace skills, structural findings with health gate.
 |--|--|
 | **Crate / folder** | `agentic-audiolab` |
 | **Binary** | **`agal`** |
-| **Output folder** | `audiolabs/` (default) |
+| **Output folder** | `agal/` (default) |
 | **Config** | `agal.toml` next to root `Cargo.toml` |
 
 
@@ -40,16 +40,16 @@ cd /path/to/your-plugin-workspace
 agal .
 ```
 
-### Output (`audiolabs/` by default)
+### Output (`agal/` by default)
 
 | File | Who | Purpose |
 |------|-----|---------|
 | **`AGAL.md`** | AI first | **agal entry** — skills index + hot path (regenerated; never hand-edit) |
 | `Cheatsheet.md` | human | CLI + workflow (regenerated) |
-| `audiolabs.agent.md` | AI | structural map + **health** (~1–3k tokens); error/warn findings only |
-| `audiolabs.delta.md` | both | structural changes since last generate |
-| `audiolabs.json` | AI escalate | edges, params, **all** findings (`path` / `fix`) |
-| `audiolabs.html` | human | overview graph (plugins + hubs) |
+| `agal.agent.md` | AI | structural map + **health** (~1–3k tokens); error/warn findings only |
+| `agal.delta.md` | both | structural changes since last generate |
+| `agal.json` | AI escalate | edges, params, **all** findings (`path` / `fix`) |
+| `agal.html` | human | overview graph (plugins + hubs) |
 | `notes/<name>.md` | both | auto header + **human body preserved** |
 | `notes/_index.md` | human | note index |
 | `<plugin>.slice.json` | AI | create with `--plugin`; **refreshed** on every later `agal .` |
@@ -81,20 +81,20 @@ agal doctor                   # Clippy + clap-validator + optional symbol tools 
 
 | Layer | Artifact |
 |-------|----------|
-| **L3** | `audiolabs/AGAL.md` — entry, focus strip, equipped skills, budget, loadouts |
-| **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
+| **L3** | `agal/AGAL.md` — entry, focus strip, equipped skills, budget, loadouts |
+| **L2** | `agal.agent.md` (+ `delta`) — map + health |
 | **L1** | `notes/<focus>.md` — one note; scan `[ATOM]` first |
-| **L0** | slice / `audiolabs.json` — escalate only |
+| **L0** | slice / `agal.json` — escalate only |
 | loadout | ≤1 skill (match `triggers`) |
 | durable | `notes/_workspace.md` — never overwritten |
 
 1. **L3** `AGAL.md`
-2. **L2** `audiolabs.agent.md` — **health** (`ok` / `degraded` / `blocked`)
+2. **L2** `agal.agent.md` — **health** (`ok` / `degraded` / `blocked`)
 3. If **blocked** → fix **error** findings first (`path` + `fix`)
-4. **L2** `audiolabs.delta.md`
+4. **L2** `agal.delta.md`
 5. **L1** `notes/<focus>.md` (**one** plugin or crate)
 6. **loadout** from pack list in `AGAL.md` — **≤1** skill file default
-7. **L0** slice / `audiolabs.json` only when escalating
+7. **L0** slice / `agal.json` only when escalating
 
 **Per-turn budget:** 1 focus note · ≤1 skill file · errors before warns · JSON only when escalating.  
 **Loadouts** (sync once): `core` · `policy` · `core,ui/slint` · `core,formats/clap` · `agents` — full table in `AGAL.md`.  
@@ -108,7 +108,7 @@ Users keep product rules there and add a one-line pointer:
 
 ```markdown
 ## Orientation (agal)
-Read **`audiolabs/AGAL.md`** first for map, health, and skills.
+Read **`agal/AGAL.md`** first for map, health, and skills.
 ```
 
 ### Skills (tool packs)
@@ -128,17 +128,17 @@ copy via CLI — not on every generate (avoids MCP-style context bloat).
 
 ### gitignore
 
-**Simple** (everything local, nothing versioned under `audiolabs/`):
+**Simple** (everything local, nothing versioned under `agal/`):
 
 ```gitignore
-/audiolabs
+/agal
 ```
 
 Optional: version adapted skill packs while keeping graph/notes local:
 
 ```gitignore
-/audiolabs/*
-!/audiolabs/skills/
+/agal/*
+!/agal/skills/
 ```
 
 ## What it detects
@@ -163,7 +163,7 @@ All fields optional. See also `examples/agal.toml`.
 ### Minimal (any workspace)
 
 ```toml
-output_dir = "audiolabs"
+output_dir = "agal"
 
 # Optional: name migrations yourself (from → to editor / adapter ids)
 # [migrations.old-editor]
@@ -185,7 +185,7 @@ Zero-config already assumes the truce-slint migration. Explicit form:
 
 ```toml
 project_name = "My Plugins"
-output_dir = "audiolabs"
+output_dir = "agal"
 
 ui_crates = ["lx-ui-slint"]
 ipc_hubs = ["lx-shm", "lx-analysis"]
@@ -212,7 +212,7 @@ reason = "product surface intentional"
 | **degraded** | warnings only |
 | **blocked** | any error |
 
-`audiolabs.agent.md` lists **error + warn** only. Info (tool hints, large param
+`agal.agent.md` lists **error + warn** only. Info (tool hints, large param
 surface, …) stays in JSON/HTML unless suppressed.
 
 When `[[suppress]]` mutes findings:
@@ -259,7 +259,7 @@ Default JSON is slim (no bulk `dependency_details` / symbols unless `-v`).
 
 ## HTML
 
-Open `audiolabs/audiolabs.html`:
+Open `agal/agal.html`:
 
 - overview: plugins + hub crates (progressive disclosure)
 - edge colors: cargo / uses_ui / ipc_peer / runtime
@@ -270,11 +270,11 @@ Open `audiolabs/audiolabs.html`:
 
 ```markdown
 ## Orientation (agal)
-Read **`audiolabs/AGAL.md`** first for map, health, and skills.
+Read **`agal/AGAL.md`** first for map, health, and skills.
 If blocked, fix error findings (`path` + `fix`) before feature work.
 Then agent map → delta → notes/<focus> → skills on demand (packs under skills/).
-Escalate: `agal --plugin NAME .` or `audiolabs.json`.
-Config: `audiolabs.toml` (`[[suppress]]` for intentional noise).
+Escalate: `agal --plugin NAME .` or `agal.json`.
+Config: `agal.toml` (`[[suppress]]` for intentional noise).
 Regenerate: `agal .`  |  doctor: `agal doctor`  |  core skills: `agal skills sync`
 ```
 

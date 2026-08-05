@@ -45,7 +45,7 @@ cargo run -- --watch .
 | Doc | Role |
 |-----|------|
 | `README.md` | product identity, scope, CLI, config, findings |
-| `crates/core/src/guide.rs` | **Cheatsheet.md** template (regenerated into `audiolabs/`) |
+| `crates/core/src/guide.rs` | **Cheatsheet.md** template (regenerated into `agal/`) |
 | `skills/00-core/` | DSP constitution (default `agal skills sync`) |
 | `skills/06-agents/agent-usage.md` | agent hot path (opt-in: `agal skills sync --only agents`) |
 | `examples/agal.toml` | config sample |

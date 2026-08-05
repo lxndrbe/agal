@@ -169,8 +169,8 @@ pub fn write_html(
         findings,
         meta,
     )?;
-    let output_dir = project_config.output_dir.as_deref().unwrap_or("audiolabs");
-    let output_path = project_root.join(output_dir).join("audiolabs.html");
+    let output_dir = project_config.output_dir.as_deref().unwrap_or("agal");
+    let output_path = project_root.join(output_dir).join("agal.html");
     fs::write(&output_path, html)
         .map_err(|e| format!("failed to write {}: {}", output_path.display(), e))?;
     Ok(())
@@ -316,7 +316,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
 
     #controls-card { top: 18px; left: 18px; }
     #overview-card { top: 18px; right: 18px; text-align: right; }
-    #findings-card { bottom: 18px; left: 18px; max-height: 42vh; display: flex; flex-direction: column; }
+    #findings-card { bottom: 18px; left: 18px; max-height: 32vh; display: flex; flex-direction: column; }
     #findings-card .card-body { overflow-y: auto; flex: 1; }
     #legend-card { bottom: 18px; right: 18px; }
 
@@ -880,10 +880,10 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       </div>
     </div>
 
-    <div class="floating-card" id="findings-card">
+    <div class="floating-card collapsed" id="findings-card">
       <div class="card-header">
         <div class="card-title">Findings</div>
-        <button class="card-toggle" data-target="findings-card" aria-label="collapse">−</button>
+        <button class="card-toggle" data-target="findings-card" aria-label="expand">+</button>
       </div>
       <div class="card-body" id="findings-body"></div>
     </div>

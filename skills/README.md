@@ -33,7 +33,7 @@ agal skills sync --only all --force
 agal skills list
 ```
 
-Writes to `<workspace>/audiolabs/skills/` and refreshes **`audiolabs/AGAL.md`**
+Writes to `<workspace>/agal/skills/` and refreshes **`agal/AGAL.md`**
 (skills index). Without `--force`, existing files are skipped (local edits kept).
 
 ## Selectors
@@ -65,10 +65,10 @@ Writes to `<workspace>/audiolabs/skills/` and refreshes **`audiolabs/AGAL.md`**
 **Disclosure:** L3 `AGAL.md` → L2 map (+ delta) → L1 one note → L0 slice/json.  
 Next layer only if current is not enough.
 
-1. **L3** `audiolabs/AGAL.md` (skills + budget / loadouts / stack / disclosure)
-2. **L2** `audiolabs.agent.md` (map + health)
-3. **L2** `audiolabs.delta.md` if present
-4. **L1** `audiolabs/notes/<focus>.md` (**one** note; scan `[ATOM]` first)
+1. **L3** `agal/AGAL.md` (skills + budget / loadouts / stack / disclosure)
+2. **L2** `agal.agent.md` (map + health)
+3. **L2** `agal.delta.md` if present
+4. **L1** `agal/notes/<focus>.md` (**one** note; scan `[ATOM]` first)
 5. **loadout** — core skills if synced (`00-core/`) — **≤1** skill file default
 6. Other packs when the task needs them (`ui/slint`, formats, …)
 7. **L0** JSON / slice escalate
@@ -78,7 +78,7 @@ Next layer only if current is not enough.
 ## Workspace root
 
 Product rules live in root **`AGENTS.md`** (user-owned).  
-Point at `audiolabs/AGAL.md`. agal never overwrites root AGENTS.md.
+Point at `agal/AGAL.md`. agal never overwrites root AGENTS.md.
 
 ## Registry
 

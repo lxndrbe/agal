@@ -63,7 +63,7 @@ enum SkillsCmd {
         /// Overwrite existing skill files
         #[arg(long)]
         force: bool,
-        /// Output dir under project root (default: audiolabs)
+        /// Output dir under project root (default: agal)
         #[arg(short, long)]
         output: Option<String>,
         #[arg(default_value = ".")]
@@ -78,7 +78,7 @@ fn main() {
         match cmd {
             Commands::Skills { action } => match action {
                 SkillsCmd::List => {
-                    audiolabs_core::skills::print_list();
+                    agal_core::skills::print_list();
                     return;
                 }
                 SkillsCmd::Sync {
@@ -104,7 +104,7 @@ fn main() {
                         std::process::exit(1);
                     }
                     let only_spec = if let Some(ref p) = preset {
-                        match audiolabs_core::skills::resolve_preset(p) {
+                        match agal_core::skills::resolve_preset(p) {
                             Ok(expanded) => expanded.to_string(),
                             Err(e) => {
                                 eprintln!("error: {}", e);
@@ -114,20 +114,20 @@ fn main() {
                     } else {
                         only
                     };
-                    let selection = match audiolabs_core::skills::parse_selection(&only_spec) {
+                    let selection = match agal_core::skills::parse_selection(&only_spec) {
                         Ok(s) => s,
                         Err(e) => {
                             eprintln!("error: {}", e);
                             std::process::exit(1);
                         }
                     };
-                    let output_dir = output.unwrap_or_else(|| "audiolabs".to_string());
-                    let opts = audiolabs_core::skills::SyncOptions {
+                    let output_dir = output.unwrap_or_else(|| "agal".to_string());
+                    let opts = agal_core::skills::SyncOptions {
                         selection,
                         force,
                         output_dir,
                     };
-                    if let Err(e) = audiolabs_core::skills::sync(&root, &opts) {
+                    if let Err(e) = agal_core::skills::sync(&root, &opts) {
                         eprintln!("error: {}", e);
                         std::process::exit(1);
                     }
@@ -150,7 +150,7 @@ fn main() {
                     eprintln!("error: no Cargo.toml in {}", root.display());
                     std::process::exit(1);
                 }
-                match audiolabs_core::doctor(&root) {
+                match agal_core::doctor(&root) {
                     Ok(report) => {
                         print!("{report}");
                         return;
@@ -181,7 +181,7 @@ fn main() {
         std::process::exit(1);
     }
 
-    let options = audiolabs_core::GenerateOptions {
+    let options = agal_core::GenerateOptions {
         watch_mode: cli.watch,
         install_hook: cli.install_hook,
         output_dir_override: cli.output,
@@ -190,7 +190,7 @@ fn main() {
         plugin_filter: cli.plugin,
     };
 
-    if let Err(e) = audiolabs_core::generate(&project_root, &options) {
+    if let Err(e) = agal_core::generate(&project_root, &options) {
         eprintln!("error: {}", e);
         std::process::exit(1);
     }

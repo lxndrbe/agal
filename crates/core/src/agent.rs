@@ -165,7 +165,7 @@ pub fn render_agent_md(graph: &Audiolabs, skills_dir: Option<&Path>) -> String {
                     f.node.as_deref().map(short_id).unwrap_or_default()
                 );
             }
-            let _ = writeln!(s, "\n_full: `audiolabs.delta.md`_\n");
+            let _ = writeln!(s, "\n_full: `agal.delta.md`_\n");
         }
     }
 
@@ -184,7 +184,7 @@ pub fn render_agent_md(graph: &Audiolabs, skills_dir: Option<&Path>) -> String {
         .collect();
     let _ = writeln!(
         s,
-        "## notes (focus)\n`audiolabs/notes/<name>.md` — auto header + human body\n"
+        "## notes (focus)\n`agal/notes/<name>.md` — auto header + human body\n"
     );
     if !plugins.is_empty() {
         let _ = writeln!(
@@ -222,10 +222,10 @@ pub fn render_agent_md(graph: &Audiolabs, skills_dir: Option<&Path>) -> String {
          1. **L3** **`AGAL.md`** (orientation — skills + budget / loadouts / disclosure).  \n\
          2. **L2** **this file** (structural map + health).  \n\
          3. If health is **blocked**, fix error findings first (path + fix fields).  \n\
-         4. **L2** **`audiolabs.delta.md`** if present.  \n\
+         4. **L2** **`agal.delta.md`** if present.  \n\
          5. **L1** **`notes/<focus>.md`** (**one** note; scan `[ATOM]` first).  \n\
          6. **loadout** — skills on demand from `AGAL.md` (never dump all; **≤1** skill file).  \n\
-         7. **L0** escalate: `agal --plugin NAME .` slice, or `audiolabs.json`.  \n\
+         7. **L0** escalate: `agal --plugin NAME .` slice, or `agal.json`.  \n\
          8. HTML is for humans (overview); agents prefer md/json.  \n\
          \n\
          Skills are **not** auto-copied on generate — `agal skills sync` (default: **core** only).  \n\
@@ -325,9 +325,9 @@ pub fn render_agal_md(
          | Layer | Artifact | Open when |\n\
          |-------|----------|----------|\n\
          | **L3** entry | **this file** (`AGAL.md`) | always first — budget, loadouts, skills index |\n\
-         | **L2** map | `audiolabs.agent.md` (+ `delta` if present) | need structure / health / what changed |\n\
+         | **L2** map | `agal.agent.md` (+ `delta` if present) | need structure / health / what changed |\n\
          | **L1** focus | `notes/<focus>.md` (scan **`[ATOM]`** first) | work on one plugin/crate |\n\
-         | **L0** raw | `*.slice.json` / `audiolabs.json` | map + note still insufficient |\n\
+         | **L0** raw | `*.slice.json` / `agal.json` | map + note still insufficient |\n\
          | durable | `notes/_workspace.md` | cross-cutting decisions (never overwritten) |\n\n\
          Skills are a **side loadout** (≤1 file), not a layer — use `triggers` in the index.  \n\
          When health ≠ ok, read **Focus** strip on this page first.  \n\
@@ -338,12 +338,12 @@ pub fn render_agal_md(
         s,
         "## Hot path\n\n\
          1. **L3** — this file (`AGAL.md`)  \n\
-         2. **L2** — `audiolabs.agent.md` (structural map + health)  \n\
+         2. **L2** — `agal.agent.md` (structural map + health)  \n\
          3. If **blocked** — fix error findings first (`path` + `fix`)  \n\
-         4. **L2** — `audiolabs.delta.md` if present  \n\
+         4. **L2** — `agal.delta.md` if present  \n\
          5. **L1** — `notes/<focus>.md` (atoms → open → intent)  \n\
          6. **loadout** — one skill from the pack list below (match `triggers`)  \n\
-         7. **L0** escalate — `agal --plugin NAME .` slice, or `audiolabs.json`  \n\
+         7. **L0** escalate — `agal --plugin NAME .` slice, or `agal.json`  \n\
          8. HTML / Cheatsheet are for humans\n"
     );
 
@@ -357,7 +357,7 @@ pub fn render_agal_md(
          | skill files loaded | **1** (or one loadout row) |\n\
          | findings to act on | **errors first**, then warns; skip info until escalate |\n\
          | JSON / slice | only after map + note are not enough |\n\n\
-         Do **not** dump `skills/`, full `audiolabs.json`, or every note.\n"
+         Do **not** dump `skills/`, full `agal.json`, or every note.\n"
     );
 
     let _ = writeln!(
@@ -408,14 +408,14 @@ pub fn render_agal_md(
          | Path | Role |\n\
          |------|------|\n\
          | **`AGAL.md`** | **AI entry** (this file) |\n\
-         | `audiolabs.agent.md` | structural map + health |\n\
-         | `audiolabs.delta.md` | structural diff |\n\
-         | `audiolabs.json` | full edges / params / info findings |\n\
+         | `agal.agent.md` | structural map + health |\n\
+         | `agal.delta.md` | structural diff |\n\
+         | `agal.json` | full edges / params / info findings |\n\
          | `notes/` | auto header + human body + graph atoms |\n\
          | `notes/_workspace.md` | durable workspace memory (**never** overwritten) |\n\
          | `skills/` | synced tool packs (see above) |\n\
          | `Cheatsheet.md` | human CLI guide |\n\
-         | `audiolabs.html` | human graph |\n\
+         | `agal.html` | human graph |\n\
          | `*.slice.json` | 1-hop plugin focus |\n"
     );
 
@@ -455,7 +455,7 @@ pub fn write_agal_md(
     Ok(())
 }
 
-/// After `skills sync`: refresh AGAL.md using `audiolabs.json` if present.
+/// After `skills sync`: refresh AGAL.md using `agal.json` if present.
 pub fn refresh_agal_after_skills_sync(
     project_root: &Path,
     output_dir_name: &str,
@@ -463,7 +463,7 @@ pub fn refresh_agal_after_skills_sync(
     let output_dir = project_root.join(output_dir_name);
     fs::create_dir_all(&output_dir)
         .map_err(|e| format!("cannot create {}: {}", output_dir.display(), e))?;
-    let json_path = output_dir.join("audiolabs.json");
+    let json_path = output_dir.join("agal.json");
     let graph = crate::delta::load_previous(&json_path).map(|mut g| {
         g.delta = None;
         g
@@ -535,7 +535,7 @@ fn write_focus_findings_strip(s: &mut String, graph: &Audiolabs) {
     let _ = writeln!(
         s,
         "## Focus (health = **{h}**)\n\n\
-         Fix these before feature work. Full list: `audiolabs.agent.md`.\n"
+         Fix these before feature work. Full list: `agal.agent.md`.\n"
     );
     for f in shown {
         let mut line = format!("- [{}] **{}**: {}", f.severity, f.code, truncate_line(&f.message, 100));
@@ -553,7 +553,7 @@ fn write_focus_findings_strip(s: &mut String, graph: &Audiolabs) {
     if total > MAX_FOCUS_FINDINGS {
         let _ = writeln!(
             s,
-            "\n_… {} more error/warn in `audiolabs.agent.md`._\n",
+            "\n_… {} more error/warn in `agal.agent.md`._\n",
             total - MAX_FOCUS_FINDINGS
         );
     } else {
@@ -1005,7 +1005,7 @@ verify: review process() for alloc/lock\n\
 
     #[test]
     fn agal_md_lists_skills_without_legacy_paths() {
-        let md = render_agal_md(None, None, "audiolabs");
+        let md = render_agal_md(None, None, "agal");
         assert!(md.contains("# AGAL"));
         assert!(md.contains("00-core"));
         assert!(md.contains("04-ui"));
@@ -1052,7 +1052,7 @@ verify: review process() for alloc/lock\n\
             rules: Default::default(),
             delta: None,
         };
-        let md = render_agal_md(Some(&g), None, "audiolabs");
+        let md = render_agal_md(Some(&g), None, "agal");
         assert!(md.contains("## Focus (health = **blocked**)"));
         assert!(md.contains("migration_legacy"));
         assert!(md.contains("large_param_surface"));
@@ -1079,7 +1079,7 @@ verify: review process() for alloc/lock\n\
             "---\nid: dsp-realtime\nsummary: rt\n---\n# RT\n",
         )
         .unwrap();
-        let md = render_agal_md(None, Some(dir.as_path()), "audiolabs");
+        let md = render_agal_md(None, Some(dir.as_path()), "agal");
         let _ = std::fs::remove_dir_all(&dir);
         assert!(md.contains("Equipped (on disk)"));
         assert!(md.contains("skill file(s)"));

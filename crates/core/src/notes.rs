@@ -14,9 +14,9 @@ use crate::{Audiolabs, Edge, Node};
 /// Max auto graph atoms per note (token budget for L1).
 const MAX_GRAPH_ATOMS: usize = 12;
 
-const AUTO_START: &str = "<!-- AUDIOLABS:AUTO-START -->";
-const AUTO_END: &str = "<!-- AUDIOLABS:AUTO-END -->";
-const HUMAN_MARK: &str = "<!-- AUDIOLABS:HUMAN — edit below this line; preserved on regenerate -->";
+const AUTO_START: &str = "<!-- AGAL:AUTO-START -->";
+const AUTO_END: &str = "<!-- AGAL:AUTO-END -->";
+const HUMAN_MARK: &str = "<!-- AGAL:HUMAN — edit below this line; preserved on regenerate -->";
 
 /// Write `notes/<name>.md` for each plugin and crate node.
 pub fn write_notes(output_dir: &Path, graph: &Audiolabs) -> Result<usize, String> {
@@ -328,7 +328,7 @@ fn render_auto_section(
         s,
         "## agent focus\n\
          **L1:** scan **Graph atoms** above first, then human body below HUMAN.  \n\
-         After `audiolabs.agent.md` (L2). Escalate L0: `{}` in json / `agal --plugin {} .`\n",
+         After `agal.agent.md` (L2). Escalate L0: `{}` in json / `agal --plugin {} .`\n",
         n.id, n.name
     );
 

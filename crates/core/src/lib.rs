@@ -21,8 +21,8 @@ pub mod registry;
 pub mod skills;
 pub mod tool_hints;
 
-const AUDIOLABS_VERSION: &str = env!("CARGO_PKG_VERSION");
-const DEFAULT_OUTPUT_DIR: &str = "audiolabs";
+const AGAL_VERSION: &str = env!("CARGO_PKG_VERSION");
+const DEFAULT_OUTPUT_DIR: &str = "agal";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Framework {
@@ -122,7 +122,7 @@ pub struct Audiolabs {
     pub migration_summary: MigrationSummary,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     pub rules: BTreeMap<String, String>,
-    /// Diff vs previous audiolabs.json (if present at generate time).
+    /// Diff vs previous agal.json (if present at generate time).
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub delta: Option<delta::GraphDelta>,
 }
@@ -897,7 +897,7 @@ fn build_audiolabs(
     });
 
     Ok(Audiolabs {
-        version: AUDIOLABS_VERSION.to_string(),
+        version: AGAL_VERSION.to_string(),
         generated_at: now_rfc3339(),
         project_root: clean_project_root(project_root),
         project_name,
@@ -1081,7 +1081,7 @@ fn generate_one_shot(project_root: &Path, options: &GenerateOptions) -> Result<(
         .map_err(|e| format!("cannot create directory {}: {}", output_path.display(), e))?;
 
     // Delta vs previous JSON (load before overwrite).
-    let json_path = output_path.join("audiolabs.json");
+    let json_path = output_path.join("agal.json");
     let previous = delta::load_previous(&json_path);
     // Strip nested delta from previous so we don't recursively store deltas.
     let previous = previous.map(|mut g| {
@@ -1117,14 +1117,14 @@ fn generate_one_shot(project_root: &Path, options: &GenerateOptions) -> Result<(
             None
         },
     );
-    let agent_path = output_path.join("audiolabs.agent.md");
+    let agent_path = output_path.join("agal.agent.md");
     fs::write(&agent_path, &agent_md)
         .map_err(|e| format!("failed to write {}: {}", agent_path.display(), e))?;
     agent::write_agal_md(&output_path, Some(&graph), &output_dir)?;
 
     // Delta markdown
     let delta_md = delta::render_md(&d);
-    let delta_path = output_path.join("audiolabs.delta.md");
+    let delta_path = output_path.join("agal.delta.md");
     fs::write(&delta_path, &delta_md)
         .map_err(|e| format!("failed to write {}: {}", delta_path.display(), e))?;
 
@@ -1195,8 +1195,8 @@ fn generate_one_shot(project_root: &Path, options: &GenerateOptions) -> Result<(
 
     let display_root = clean_project_root(project_root);
     println!(
-        "audiolabs v{} generated for {} in {}/{}",
-        AUDIOLABS_VERSION, graph.project_name, display_root, output_dir
+        "agal v{} generated for {} in {}/{}",
+        AGAL_VERSION, graph.project_name, display_root, output_dir
     );
     println!(
         "  {} nodes, {} edges, {} plugins, {} findings",
@@ -1246,7 +1246,7 @@ fn generate_one_shot(project_root: &Path, options: &GenerateOptions) -> Result<(
         );
     }
     println!("  agal: {}/AGAL.md", output_dir);
-    println!("  agent map: {}/audiolabs.agent.md", output_dir);
+    println!("  agent map: {}/agal.agent.md", output_dir);
     println!("  notes: {}/notes/ ({} files)", output_dir, notes_n);
     println!("  guide: {}/Cheatsheet.md", output_dir);
     println!("  skills: not auto-copied — run `agal skills sync` (default: core)");

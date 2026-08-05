@@ -21,7 +21,7 @@ pub struct ProjectConfig {
     /// Custom rules shown in the JSON output.
     #[serde(default)]
     pub rules: BTreeMap<String, String>,
-    /// Override default output directory (default: "audiolabs/").
+    /// Override default output directory (default: "agal/").
     #[serde(default)]
     pub output_dir: Option<String>,
     /// Crate package names treated as shared Slint UI libraries (for uses_ui edges).
@@ -82,7 +82,7 @@ pub fn default_migrations() -> BTreeMap<String, MigrationSpec> {
 }
 
 impl ProjectConfig {
-    /// Load the project config (`agal.toml`, falling back to `audiolabs.toml` / `audio-graph.toml`).
+    /// Load the project config (`agal.toml`, falling back to `agal.toml` / `audio-graph.toml`).
     pub fn load(project_root: &Path) -> Self {
         let path = config_path(project_root);
         let mut cfg = if let Some(path) = path {
@@ -106,7 +106,7 @@ impl ProjectConfig {
 }
 
 /// Returns the config path next to the root Cargo.toml.
-/// Lookup order: `agal.toml` (current) → `audiolabs.toml` → `audio-graph.toml` (legacy).
+/// Lookup order: `agal.toml` (current) → `audio-graph.toml` (legacy).
 pub fn config_path(project_root: &Path) -> Option<std::path::PathBuf> {
     for name in ["agal.toml", "audiolabs.toml", "audio-graph.toml"] {
         let candidate = project_root.join(name);

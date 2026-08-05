@@ -6,7 +6,7 @@ use std::path::Path;
 
 use crate::Audiolabs;
 
-/// Write `Cheatsheet.md` into the audiolabs output root (commands + what lives where).
+/// Write `Cheatsheet.md` into the agal output root (commands + what lives where).
 pub fn write_readme(
     output_dir: &Path,
     graph: &Audiolabs,
@@ -35,7 +35,7 @@ fn render(graph: &Audiolabs, out: &str) -> String {
 
     let _ = writeln!(
         s,
-        r#"# Cheatsheet — agal / audiolabs
+        r#"# Cheatsheet — agal
 
 **Summary:** Local orientation layer for humans and AI in a plugin workspace.  
 Everything useful lives **in this folder**. Product: **agentic-audiolab**, binary: **`agal`**.
@@ -66,7 +66,7 @@ Requires `agal` on your `PATH`, or install from the tool repo:
 `cargo install --path . --force` in **Agentic Audiolab**.
 
 Config (optional): **`agal.toml`** next to the root `Cargo.toml`  
-(older names `audiolabs.toml` and `audio-graph.toml` still load if the new file is missing).
+(older names `agal.toml` and `audio-graph.toml` still load if the new file is missing).
 
 ---
 
@@ -76,10 +76,10 @@ Config (optional): **`agal.toml`** next to the root `Cargo.toml`
 |------|-----|---------|
 | **[AGAL.md](./AGAL.md)** | AI first | **agal entry** — skills index + hot path (regenerated) |
 | **[Cheatsheet.md](./Cheatsheet.md)** | you | **this file** — CLI + workflow |
-| **[audiolabs.html](./audiolabs.html)** | you | graph overview (browser / Obsidian HTML) |
-| **[audiolabs.agent.md](./audiolabs.agent.md)** | AI | structural map + **health** (~1–3k tokens) |
-| **[audiolabs.delta.md](./audiolabs.delta.md)** | AI / you | structural changes since last generate |
-| **[audiolabs.json](./audiolabs.json)** | AI escalate | full edges, params, **all** findings (incl. info) |
+| **[agal.html](./agal.html)** | you | graph overview (browser / Obsidian HTML) |
+| **[agal.agent.md](./agal.agent.md)** | AI | structural map + **health** (~1–3k tokens) |
+| **[agal.delta.md](./agal.delta.md)** | AI / you | structural changes since last generate |
+| **[agal.json](./agal.json)** | AI escalate | full edges, params, **all** findings (incl. info) |
 | **[notes/](./notes/)** | you + AI | one MD per plugin/crate (auto header + your text) |
 | **[notes/_index.md](./notes/_index.md)** | you | index of all notes |
 | **skills/** | AI | tool packs after `agal skills sync` — default: core (DSP) |
@@ -166,7 +166,7 @@ reason = "product surface intentional"
 ### Human
 
 1. `agal .` after larger code changes (or `--watch`)
-2. Open **[audiolabs.html](./audiolabs.html)** — plugins + hubs
+2. Open **[agal.html](./agal.html)** — plugins + hubs
 3. Edit **[notes/&lt;name&gt;.md](./notes/)** **below** the HUMAN marker only (AUTO block + graph atoms are rewritten)
 4. `agal skills sync` once per machine/workspace when needed
 5. `agal doctor` before release-style validation
@@ -178,19 +178,19 @@ reason = "product surface intentional"
 | Layer | Artifact |
 |-------|----------|
 | **L3** | `AGAL.md` — entry, **focus strip**, equipped skills, budget, loadouts |
-| **L2** | `audiolabs.agent.md` (+ `delta`) — map + health |
+| **L2** | `agal.agent.md` (+ `delta`) — map + health |
 | **L1** | `notes/&lt;focus&gt;.md` — **graph atoms first**, then human body |
-| **L0** | slice / `audiolabs.json` — escalate only |
+| **L0** | slice / `agal.json` — escalate only |
 | loadout | ≤1 skill file (match `triggers`) — not a layer |
 | durable | `notes/_workspace.md` — workspace memory (never overwritten) |
 
 1. **L3** `AGAL.md`
-2. **L2** `audiolabs.agent.md` — structural map + **health**
+2. **L2** `agal.agent.md` — structural map + **health**
 3. If **blocked**: fix error findings first (`path` + `fix`)
-4. **L2** `audiolabs.delta.md` if present
+4. **L2** `agal.delta.md` if present
 5. **L1** `notes/&lt;focus&gt;.md` (**one** note) — scan **Graph atoms (auto)** before prose
 6. **loadout** — skills on demand (`00-core` default, `ui/slint`, …) — **≤1** skill file
-7. **L0** escalate: slice / `audiolabs.json`
+7. **L0** escalate: slice / `agal.json`
 
 ### Context budget (per turn)
 

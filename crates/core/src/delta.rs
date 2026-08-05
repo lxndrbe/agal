@@ -6,7 +6,7 @@ use std::path::Path;
 use crate::Audiolabs;
 use crate::findings::{Finding, finding_key};
 
-/// Diff against previous `audiolabs.json` (architectural change signal for agents).
+/// Diff against previous `agal.json` (architectural change signal for agents).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GraphDelta {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -221,7 +221,7 @@ pub fn render_md(d: &GraphDelta) -> String {
     if d.first_run {
         let _ = writeln!(
             s,
-            "# audiolabs delta\n\n\
+            "# agal delta\n\n\
              **Summary:** First run; no previous graph exists for comparison.  \n\
              The graph baseline has been written and future runs will show changes.  \n\
              Review the agent summary for the initial workspace structure.\n\n\
@@ -231,7 +231,7 @@ pub fn render_md(d: &GraphDelta) -> String {
     }
     let _ = writeln!(
         s,
-        "# audiolabs delta\n\n\
+        "# agal delta\n\n\
          **Summary:** Structural changes since the previous generation.  \n\
          Tracks added/removed/changed nodes, edges, and new/resolved findings.  \n\
          Use to review architecture drift before editing code.\n\n\

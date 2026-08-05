@@ -17,7 +17,7 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-audiolabs-core = { path = "crates/core" }
+agal-core = { path = "crates/core" }
 
 [workspace]
 members = ["crates/core"]

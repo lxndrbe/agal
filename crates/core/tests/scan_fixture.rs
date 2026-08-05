@@ -1,7 +1,7 @@
 //! Integration: scan a tiny on-disk workspace fixture.
 
-use audiolabs_core::findings::{Health, Severity, health};
-use audiolabs_core::{GenerateOptions, generate, scan};
+use agal_core::findings::{Health, Severity, health};
+use agal_core::{GenerateOptions, generate, scan};
 use std::path::PathBuf;
 
 fn fixture_root() -> PathBuf {
@@ -89,7 +89,7 @@ fn generate_writes_agent_without_info_noise() {
     )
     .expect("generate");
 
-    let agent = std::fs::read_to_string(out.join("audiolabs.agent.md")).expect("agent.md");
+    let agent = std::fs::read_to_string(out.join("agal.agent.md")).expect("agent.md");
     assert!(agent.contains("health: **blocked**"), "agent:\n{agent}");
     assert!(agent.contains("migration_legacy"), "should list errors");
     assert!(
@@ -101,7 +101,7 @@ fn generate_writes_agent_without_info_noise() {
         "info clap hints must stay out of agent.md"
     );
 
-    let json = std::fs::read_to_string(out.join("audiolabs.json")).expect("json");
+    let json = std::fs::read_to_string(out.join("agal.json")).expect("json");
     assert!(json.contains("tool_hint_clippy"));
     assert!(json.contains("\"fix\""));
 
@@ -178,7 +178,7 @@ fn notes_preserve_human_body() {
         body2.contains("KEEP_THIS_HUMAN_LINE"),
         "human body not preserved:\n{body2}"
     );
-    assert!(body2.contains("AUDIOLABS:AUTO-START"));
+    assert!(body2.contains("AGAL:AUTO-START"));
 
     let _ = std::fs::remove_dir_all(&out);
 }

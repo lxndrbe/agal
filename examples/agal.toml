@@ -7,7 +7,7 @@
 
 # --- minimal ---
 # project_name = "My Audio Plugins"
-# output_dir = "audiolabs"
+# output_dir = "agal"
 
 # [migrations.old-to-new]
 # from = "old-adapter"

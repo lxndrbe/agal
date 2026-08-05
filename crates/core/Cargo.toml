@@ -1,8 +1,8 @@
 [package]
-name = "audiolabs-core"
+name = "agal-core"
 version = "0.5.3"
 edition = "2024"
-description = "Core library for agentic-audiolab"
+description = "Core library for agentic-audiolab (agal)"
 license = "MIT"
 authors = ["agentic-audiolab contributors"]
 
