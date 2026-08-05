@@ -66,6 +66,7 @@ agal --agent-only .           # skip HTML
 
 agal skills list
 agal skills sync              # default: core (DSP constitution)
+agal skills sync --preset slint-ui   # loadout: core + ui/slint
 agal skills sync --only policy
 agal skills sync --only ui/slint
 agal skills sync --only core,ui/slint,formats/clap

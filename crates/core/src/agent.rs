@@ -364,14 +364,14 @@ pub fn render_agal_md(
         s,
         "## Task loadouts\n\n\
          Sync once, then load **only** what the task needs:\n\n\
-         | Task | `agal skills sync --only …` | Load in context | Verify (when applicable) |\n\
-         |------|-----------------------------|-----------------|--------------------------|\n\
-         | DSP / process / realtime | `core` (default) | `00-core/*` as needed | `cargo clippy --workspace --all-targets -- -D warnings` |\n\
-         | Policy / terse edits | `policy` | `caveman` **or** `ponytail` | — |\n\
-         | Slint UI | `core,ui/slint` | `slint` (+ core if DSP) | — |\n\
-         | CLAP ship / formats | `core,formats/clap` | `clap` | after build: `clap-validator validate path/to/plugin.clap` |\n\
-         | Agent orientation playbook | `agents` | `agent-usage` | — |\n\
-         | Full pack | `all` | rare — context bloat | — |\n"
+         | Task | Preset / `--only` | Load in context | Verify (when applicable) |\n\
+         |------|-------------------|-----------------|--------------------------|\n\
+         | DSP / process / realtime | `--preset dsp-fix` (= `core`) | `00-core/*` as needed | `cargo clippy --workspace --all-targets -- -D warnings` |\n\
+         | Policy / terse edits | `--preset policy-edit` (= `policy`) | `caveman` **or** `ponytail` | — |\n\
+         | Slint UI | `--preset slint-ui` (= `core,ui/slint`) | `slint` (+ core) | — |\n\
+         | CLAP ship / formats | `--preset clap-ship` (= `core,formats/clap`) | `clap` | after build: `clap-validator validate path/to/plugin.clap` |\n\
+         | Agent orientation playbook | `--preset agent-playbook` (= `agents`) | `agent-usage` | — |\n\
+         | Full pack | `--only all` | rare — context bloat | — |\n"
     );
 
     let _ = writeln!(
@@ -426,6 +426,7 @@ pub fn render_agal_md(
          agal .                              # refresh map + AGAL.md + notes + html\n\
          agal --plugin aether .              # + one-hop slice\n\
          agal skills sync                    # default: core (00-core)\n\
+         agal skills sync --preset slint-ui  # core + slint (loadout)\n\
          agal skills sync --only ui/slint    # single pack file\n\
          agal skills sync --only policy,agents\n\
          agal skills list\n\

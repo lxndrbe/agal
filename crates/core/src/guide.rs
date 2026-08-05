@@ -114,12 +114,16 @@ Binary: **`agal`**. Always run from the **Cargo workspace root** (root `Cargo.to
 |---------|----------------|
 | `agal skills list` | list embedded packs |
 | `agal skills sync` | **default: core** → `{out}/skills/00-core/` |
+| `agal skills sync --preset slint-ui` | loadout preset → `core` + `ui/slint` |
 | `agal skills sync --only policy` | whole group (opt-in) |
 | `agal skills sync --only ui/slint` | **single** skill from a group |
+| `agal skills sync --only slint-ui` | same as `--preset slint-ui` (preset as token) |
 | `agal skills sync --only core,ui/slint` | mix groups + singles |
 | `agal skills sync --only all` | everything (rare — context bloat) |
 | `agal skills sync --force` | overwrite existing skill files |
 | `agal skills sync --output {out}` | different output directory |
+
+Presets: `dsp-fix` · `slint-ui` · `clap-ship` · `agent-playbook` · `policy-edit` (see `agal skills list`).
 
 Without `--force`, existing skill files are **skipped** (local edits kept).
 
@@ -197,17 +201,18 @@ reason = "product surface intentional"
 | findings | errors first, then warns; info only on escalate |
 | JSON / slice | only when map + note are not enough |
 
-### Task loadouts
+### Task loadouts / presets
 
-| Task | `agal skills sync --only …` | Verify (when applicable) |
-|------|-----------------------------|--------------------------|
-| DSP / realtime | `core` (default) | `cargo clippy --workspace --all-targets -- -D warnings` |
-| Policy / terse edits | `policy` | — |
-| Slint UI | `core,ui/slint` | — |
-| CLAP / formats | `core,formats/clap` | `clap-validator validate path/to/plugin.clap` (after build) |
-| Agent playbook | `agents` | — |
-| Everything | `all` (rare) | — |
+| Task | Command | Verify (when applicable) |
+|------|---------|--------------------------|
+| DSP / realtime | `agal skills sync --preset dsp-fix` | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Policy / terse edits | `agal skills sync --preset policy-edit` | — |
+| Slint UI | `agal skills sync --preset slint-ui` | — |
+| CLAP / formats | `agal skills sync --preset clap-ship` | `clap-validator validate path/to/plugin.clap` (after build) |
+| Agent playbook | `agal skills sync --preset agent-playbook` | — |
+| Everything | `agal skills sync --only all` (rare) | — |
 
+Presets also work as `--only` tokens (`--only slint-ui`).  
 **Equipped** skills (what is already under `skills/`) are listed at the top of **`AGAL.md`** after each generate / skills sync.
 
 ### Stack layers

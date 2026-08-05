@@ -6,6 +6,11 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
+## [0.5.3] — 2026-08-05
+
+### Added
+- **Skill loadout presets** — `agal skills sync --preset slint-ui` (also as `--only` tokens): `dsp-fix`, `slint-ui`, `clap-ship`, `agent-playbook`, `policy-edit`; listed in `agal skills list`
+
 ## [0.5.2] — 2026-08-05
 
 ### Added

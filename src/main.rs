@@ -54,9 +54,12 @@ enum SkillsCmd {
     List,
     /// Copy selected groups/skills into <workspace>/<output>/skills/
     Sync {
-        /// Comma list: groups (`policy`, `ui`) and/or singles (`ui/slint`, `04-ui/slint`); default `core`
+        /// Comma list: groups (`policy`, `ui`), singles (`ui/slint`), presets (`slint-ui`); default `core`
         #[arg(long, default_value = "core")]
         only: String,
+        /// Task loadout preset (overrides `--only`): `dsp-fix`, `slint-ui`, `clap-ship`, …
+        #[arg(long, value_name = "NAME")]
+        preset: Option<String>,
         /// Overwrite existing skill files
         #[arg(long)]
         force: bool,
@@ -80,6 +83,7 @@ fn main() {
                 }
                 SkillsCmd::Sync {
                     only,
+                    preset,
                     force,
                     output,
                     project_root,
@@ -99,7 +103,18 @@ fn main() {
                         eprintln!("error: no Cargo.toml in {}", root.display());
                         std::process::exit(1);
                     }
-                    let selection = match audiolabs_core::skills::parse_selection(&only) {
+                    let only_spec = if let Some(ref p) = preset {
+                        match audiolabs_core::skills::resolve_preset(p) {
+                            Ok(expanded) => expanded.to_string(),
+                            Err(e) => {
+                                eprintln!("error: {}", e);
+                                std::process::exit(1);
+                            }
+                        }
+                    } else {
+                        only
+                    };
+                    let selection = match audiolabs_core::skills::parse_selection(&only_spec) {
                         Ok(s) => s,
                         Err(e) => {
                             eprintln!("error: {}", e);

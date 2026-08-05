@@ -5,7 +5,8 @@
 //!
 //! Default pack: **core** (domain constitution). Everything else is opt-in.
 //!
-//! `--only` accepts groups (`policy`, `ui`) and single skills (`ui/slint`, `04-ui/slint`).
+//! `--only` accepts groups (`policy`, `ui`), singles (`ui/slint`), and **presets**
+//! (`slint-ui` → `core,ui/slint`). Same presets work via `agal skills sync --preset …`.
 
 use std::fs;
 use std::path::Path;
@@ -123,17 +124,56 @@ fn path_stem(rel: &str) -> &str {
 #[derive(Debug, Clone)]
 pub struct Selection {
     pub files: Vec<SkillFile>,
-    /// Human labels for logging (`core`, `ui/slint`, …).
+    /// Human labels for logging (`core`, `ui/slint`, `preset:slint-ui`, …).
     pub labels: Vec<String>,
 }
 
-/// Parse `--only` spec: groups and/or single skills.
+/// Task-loadout presets → `--only` grammar. Stable short names for humans/agents.
+///
+/// | Preset | Expands to |
+/// |--------|------------|
+/// | `dsp-fix` | `core` |
+/// | `slint-ui` | `core,ui/slint` |
+/// | `clap-ship` | `core,formats/clap` |
+/// | `agent-playbook` | `agents` |
+/// | `policy-edit` | `policy` |
+pub fn resolve_preset(name: &str) -> Result<&'static str, String> {
+    match name.trim().to_ascii_lowercase().as_str() {
+        "dsp-fix" | "dsp" => Ok("core"),
+        "slint-ui" => Ok("core,ui/slint"),
+        "clap-ship" => Ok("core,formats/clap"),
+        "agent-playbook" | "agents-playbook" => Ok("agents"),
+        "policy-edit" => Ok("policy"),
+        other => Err(format!(
+            "unknown preset '{}'; known: {}",
+            other,
+            PRESET_NAMES.join(", ")
+        )),
+    }
+}
+
+/// Canonical preset names (for help / list).
+pub const PRESET_NAMES: &[&str] = &[
+    "dsp-fix",
+    "slint-ui",
+    "clap-ship",
+    "agent-playbook",
+    "policy-edit",
+];
+
+/// True if `name` is a known preset (case-insensitive).
+fn is_preset_token(name: &str) -> bool {
+    resolve_preset(name).is_ok()
+}
+
+/// Parse `--only` / `--preset` spec: groups, singles, and loadout presets.
 ///
 /// Examples:
 /// - `core` (default when empty)
 /// - `policy`, `ui`
 /// - `ui/slint`, `ui/slint.md`, `04-ui/slint`
 /// - `core,ui/slint,formats/clap`
+/// - `slint-ui` (preset → core + slint)
 /// - `all`
 pub fn parse_selection(spec: &str) -> Result<Selection, String> {
     let parts: Vec<&str> = spec
@@ -156,22 +196,49 @@ pub fn parse_selection(spec: &str) -> Result<Selection, String> {
         });
     }
 
+    // Expand loadout presets first (e.g. slint-ui → core + ui/slint tokens).
+    let mut tokens: Vec<(String, Option<String>)> = Vec::new();
+    for part in parts {
+        if is_preset_token(part) {
+            let expanded = resolve_preset(part)?;
+            let preset_label = format!("preset:{}", part.trim().to_ascii_lowercase());
+            for sub in expanded.split(',') {
+                let sub = sub.trim();
+                if !sub.is_empty() {
+                    tokens.push((sub.to_string(), Some(preset_label.clone())));
+                }
+            }
+        } else {
+            tokens.push((part.to_string(), None));
+        }
+    }
+
     let mut want_paths = std::collections::BTreeSet::new();
     let mut labels = Vec::new();
+    let mut seen_preset_labels = std::collections::BTreeSet::new();
 
-    for part in parts {
+    for (part, preset_label) in tokens {
+        if let Some(pl) = &preset_label {
+            if seen_preset_labels.insert(pl.clone()) {
+                labels.push(pl.clone());
+            }
+        }
         let part_norm = part.replace('\\', "/");
         if part_norm.contains('/') {
             let file = resolve_path_selector(&part_norm)?;
             want_paths.insert(file.rel_path);
-            labels.push(format_selector_label(file));
+            if preset_label.is_none() {
+                labels.push(format_selector_label(file));
+            }
         } else if let Ok(group) = SkillGroup::parse_one(&part_norm) {
             for s in catalog() {
                 if s.group == group {
                     want_paths.insert(s.rel_path);
                 }
             }
-            labels.push(group.as_str().to_string());
+            if preset_label.is_none() {
+                labels.push(group.as_str().to_string());
+            }
         } else {
             // bare stem: only if unique in catalog
             let stem = part_norm
@@ -185,13 +252,17 @@ pub fn parse_selection(spec: &str) -> Result<Selection, String> {
             match matches.as_slice() {
                 [] => {
                     return Err(format!(
-                        "unknown selector '{}'; use a group (ui), group/skill (ui/slint), or path (04-ui/slint)",
-                        part
+                        "unknown selector '{}'; use a group (ui), group/skill (ui/slint), \
+                         path (04-ui/slint), or preset ({})",
+                        part,
+                        PRESET_NAMES.join("|")
                     ));
                 }
                 [one] => {
                     want_paths.insert(one.rel_path);
-                    labels.push(format_selector_label(*one));
+                    if preset_label.is_none() {
+                        labels.push(format_selector_label(*one));
+                    }
                 }
                 many => {
                     let opts: Vec<String> = many
@@ -400,8 +471,16 @@ pub fn select_owned(groups: &[SkillGroup]) -> Vec<SkillFile> {
 /// Print catalog to stdout.
 pub fn print_list() {
     println!("agal skills (embedded in tool; sync into workspace with `agal skills sync`)\n");
-    println!("selectors: group | group/skill | numbered-path/skill | stem (if unique) | all\n");
+    println!(
+        "selectors: group | group/skill | numbered-path/skill | stem (if unique) | preset | all\n"
+    );
     println!("groups: core (default) | policy | frameworks | formats | ui | migrations | agents\n");
+    println!("presets (task loadouts):");
+    for name in PRESET_NAMES {
+        let exp = resolve_preset(name).unwrap_or("?");
+        println!("  {name:16} → {exp}");
+    }
+    println!();
     let mut current = None;
     for s in catalog() {
         let g = s.group.as_str();
@@ -415,6 +494,8 @@ pub fn print_list() {
     println!("  agal skills sync                      # core only");
     println!("  agal skills sync --only policy        # whole group");
     println!("  agal skills sync --only ui/slint      # single skill");
+    println!("  agal skills sync --preset slint-ui    # core + slint");
+    println!("  agal skills sync --only slint-ui      # same (preset as --only token)");
     println!("  agal skills sync --only core,ui/slint,formats/clap");
     println!("  agal skills sync --only all --force");
 }
@@ -531,5 +612,31 @@ mod tests {
     fn all_alone() {
         let s = parse_selection("all").unwrap();
         assert_eq!(s.files.len(), catalog().len());
+    }
+
+    #[test]
+    fn preset_slint_ui() {
+        let s = parse_selection("slint-ui").unwrap();
+        assert_eq!(s.files.len(), 5); // 4 core + slint
+        assert!(s.files.iter().any(|f| f.rel_path == "04-ui/slint.md"));
+        assert!(s.files.iter().any(|f| f.group == SkillGroup::Core));
+        assert!(s.labels.iter().any(|l| l == "preset:slint-ui"));
+    }
+
+    #[test]
+    fn preset_clap_ship() {
+        let s = parse_selection("clap-ship").unwrap();
+        assert!(s.files.iter().any(|f| f.rel_path == "03-formats/clap.md"));
+        assert!(s.files.iter().all(|f| {
+            f.group == SkillGroup::Core || f.rel_path == "03-formats/clap.md"
+        }));
+        assert_eq!(s.files.len(), 5);
+    }
+
+    #[test]
+    fn preset_via_resolve() {
+        assert_eq!(resolve_preset("dsp-fix").unwrap(), "core");
+        assert_eq!(resolve_preset("DSP").unwrap(), "core");
+        assert!(resolve_preset("nope").is_err());
     }
 }

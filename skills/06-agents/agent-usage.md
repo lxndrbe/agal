@@ -59,16 +59,22 @@ HTML / Cheatsheet = humans. Do **not** skip to L0 by default.
 When health is **degraded** / **blocked**, `AGAL.md` lists top error/warn findings (path + fix).  
 Fix those first. Full list remains in `audiolabs.agent.md`.
 
-## Task loadouts
+## Task loadouts / presets
 
-| Task | `agal skills sync --only …` | Load in context | Verify (when applicable) |
-|------|-----------------------------|-----------------|--------------------------|
-| DSP / process / realtime | `core` (default) | `00-core/*` as needed | `cargo clippy --workspace --all-targets -- -D warnings` |
-| Policy / terse edits | `policy` | `caveman` **or** `ponytail` | — |
-| Slint UI | `core,ui/slint` | `slint` (+ core if DSP) | — |
-| CLAP ship / formats | `core,formats/clap` | `clap` | after build: `clap-validator validate path/to/plugin.clap` |
-| Agent orientation playbook | `agents` | `agent-usage` | — |
-| Full pack | `all` | rare — context bloat | — |
+| Task | Command | Load in context | Verify |
+|------|---------|-----------------|--------|
+| DSP / process / realtime | `--preset dsp-fix` | `00-core/*` | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Policy / terse edits | `--preset policy-edit` | caveman **or** ponytail | — |
+| Slint UI | `--preset slint-ui` | slint (+ core) | — |
+| CLAP ship / formats | `--preset clap-ship` | clap | after build: `clap-validator validate path/to/plugin.clap` |
+| Agent orientation playbook | `--preset agent-playbook` | agent-usage | — |
+| Full pack | `--only all` | rare | — |
+
+```bash
+agal skills sync --preset slint-ui
+agal skills sync --only slint-ui    # same expansion
+agal skills list                    # shows presets
+```
 
 ## Stack layers
 
