@@ -22,7 +22,8 @@ pub mod skills;
 pub mod tool_hints;
 
 const AGAL_VERSION: &str = env!("CARGO_PKG_VERSION");
-const DEFAULT_OUTPUT_DIR: &str = "agal";
+/// Default workspace output folder (`agal/`). Override via `agal.toml` `output_dir` or CLI `-o`.
+pub const DEFAULT_OUTPUT_DIR: &str = "agal";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Framework {

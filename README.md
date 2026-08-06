@@ -303,4 +303,11 @@ CI: `.github/workflows/ci.yml` (fmt + clippy + test).
 
 ## License
 
-MIT
+**GPL-3.0-or-later** — see [`LICENSE`](./LICENSE).
+
+Free to use, modify, and distribute (including commercially) under the GPL:
+source must stay available under the same terms. Generated workspace notes/maps
+are your content, not automatically GPL.
+
+Stack matrix (AGAL + AURA + plugins + Slint):  
+`LX-Audiolabs/AURA/docs/licensing-compliance.md` (when present in monorepo layout).

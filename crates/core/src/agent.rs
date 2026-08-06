@@ -30,7 +30,7 @@ pub fn render_agent_md(graph: &Audiolabs, skills_dir: Option<&Path>) -> String {
     };
     let _ = writeln!(
         s,
-        "# audiolabs agent summary\n\n\
+        "# agal agent summary\n\n\
          **Summary:** Compact structural map of this audio-plugin workspace.  \n\
          Lists plugins, crates, frameworks, migrations, edges, and findings.  \n\
          Use as first context before opening the full JSON graph.\n\n\

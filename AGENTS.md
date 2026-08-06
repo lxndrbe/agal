@@ -36,7 +36,7 @@ Does **not** replace Clippy, clap-validator, or graphify.
 
 ## Orientation in *this* repo
 
-No generated `audiolabs/` for agal itself is required for day-to-day work.
+No generated `agal/` folder for the tool repo itself is required for day-to-day work.
 
 1. **`AGENTS.md`** (this file) — policy + scope
 2. **`README.md`** — product identity, CLI, config

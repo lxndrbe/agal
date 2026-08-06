@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "agal-core"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "notify",
  "serde",
@@ -16,7 +16,7 @@ dependencies = [
 
 [[package]]
 name = "agentic-audiolab"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "agal-core",
  "clap",

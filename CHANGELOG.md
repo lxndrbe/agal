@@ -6,6 +6,16 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
+## [0.5.4] — 2026-08-06
+
+### Fixed
+- **Default output dir is `agal/`** — leftover user-facing strings still said `audiolabs` (agent map title). Install this build so the binary matches the 0.5.x rename.
+- **`agal skills sync`** honors `agal.toml` `output_dir` when `-o` is omitted (same resolution as generate).
+
+### Notes
+- Legacy folder name `audiolabs/` still works if set explicitly in `output_dir`. New workspaces should use default `agal/` (omit the key or set `output_dir = "agal"`).
+- Config filename fallbacks (`audiolabs.toml`, `audio-graph.toml`) remain for migration.
+
 ## [0.5.3] — 2026-08-05
 
 ### Added

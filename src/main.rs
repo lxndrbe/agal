@@ -121,7 +121,12 @@ fn main() {
                             std::process::exit(1);
                         }
                     };
-                    let output_dir = output.unwrap_or_else(|| "agal".to_string());
+                    // CLI -o wins; else agal.toml output_dir; else DEFAULT_OUTPUT_DIR ("agal").
+                    let output_dir = output.unwrap_or_else(|| {
+                        agal_core::config::ProjectConfig::load(&root)
+                            .output_dir
+                            .unwrap_or_else(|| agal_core::DEFAULT_OUTPUT_DIR.to_string())
+                    });
                     let opts = agal_core::skills::SyncOptions {
                         selection,
                         force,
