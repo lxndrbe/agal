@@ -13,6 +13,7 @@ use std::path::Path;
 
 pub const CAVEMAN: &str = include_str!("../../../skills/01-policy/caveman.md");
 pub const PONYTAIL: &str = include_str!("../../../skills/01-policy/ponytail.md");
+pub const VERSIONING: &str = include_str!("../../../skills/01-policy/versioning.md");
 pub const AGENT_USAGE: &str = include_str!("../../../skills/06-agents/agent-usage.md");
 
 pub const DSP_REALTIME: &str = include_str!("../../../skills/00-core/dsp-realtime.md");
@@ -409,6 +410,11 @@ pub fn catalog() -> Vec<SkillFile> {
             group: SkillGroup::Policy,
             rel_path: "01-policy/ponytail.md",
             content: PONYTAIL,
+        },
+        SkillFile {
+            group: SkillGroup::Policy,
+            rel_path: "01-policy/versioning.md",
+            content: VERSIONING,
         },
         SkillFile {
             group: SkillGroup::Frameworks,
