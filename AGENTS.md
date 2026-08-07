@@ -45,6 +45,12 @@ No generated `agal/` folder for the tool repo itself is required for day-to-day 
 5. Agent hot path for *plugin* workspaces: `skills/06-agents/agent-usage.md`  
    (disclosure L3→L0 · budget · loadouts · stack · notes atoms — same as generated `AGAL.md`)
 
+## Versioning (SemVer)
+
+Single workspace version: root `Cargo.toml` + `crates/core/Cargo.toml` (keep in sync).
+Pre-1.0 semver: `0.MAJOR.MINOR` — MAJOR for breaking, MINOR for features/fixes.
+Bump BEFORE commit, not after. Changelog: `CHANGELOG.md`.
+
 ## Build / test
 
 ```bash
