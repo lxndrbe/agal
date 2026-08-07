@@ -814,8 +814,9 @@ fn integrity_checks(project_root: &Path, nodes: &[Node], out: &mut Vec<Finding>)
 
     // Explicit workspace.members that failed to resolve
     let root_cargo = project_root.join("Cargo.toml");
-    if let Ok(content) = fs::read_to_string(&root_cargo) {
-        if let Ok(toml) = content.parse::<toml::Value>() {
+    if let Ok(mut content) = fs::read_to_string(&root_cargo) {
+        content.retain(|c| c != '\r');
+        if let Ok(toml) = content.parse::<toml::Table>().map(toml::Value::Table) {
             if let Some(members) = toml
                 .get("workspace")
                 .and_then(|w| w.get("members"))

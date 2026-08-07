@@ -960,6 +960,51 @@ fn short_id(id: &str) -> String {
         .to_string()
 }
 
+fn edge_kind_order() -> &'static [&'static str] {
+    &[
+        "depends_on",
+        "build_depends_on",
+        "dev_depends_on",
+        "uses_ui",
+        "ipc_peer",
+        "runtime_depends_on",
+    ]
+}
+
+/// JSON slice: one node + 1-hop edges + related findings.
+pub fn plugin_slice(graph: &Audiolabs, plugin_name: &str) -> Option<serde_json::Value> {
+    let node = graph.nodes.iter().find(|n| {
+        n.name == plugin_name || n.id == plugin_name || n.id.ends_with(&format!("/{}", plugin_name))
+    })?;
+    let id = &node.id;
+    let related_edges: Vec<&Edge> = graph
+        .edges
+        .iter()
+        .filter(|e| e.from == *id || e.to == *id)
+        .collect();
+    let neighbor_ids: BTreeSet<&str> = related_edges
+        .iter()
+        .flat_map(|e| [e.from.as_str(), e.to.as_str()])
+        .collect();
+    let neighbors: Vec<&Node> = graph
+        .nodes
+        .iter()
+        .filter(|n| neighbor_ids.contains(n.id.as_str()) && n.id != *id)
+        .collect();
+    let findings: Vec<&Finding> = graph
+        .findings
+        .iter()
+        .filter(|f| f.node.as_deref() == Some(id.as_str()))
+        .collect();
+
+    Some(serde_json::json!({
+        "plugin": node,
+        "neighbors": neighbors,
+        "edges": related_edges,
+        "findings": findings,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{parse_skill_frontmatter, render_agal_md};
@@ -1088,49 +1133,4 @@ verify: review process() for alloc/lock\n\
             "expected core group in equipped: {md}"
         );
     }
-}
-
-fn edge_kind_order() -> &'static [&'static str] {
-    &[
-        "depends_on",
-        "build_depends_on",
-        "dev_depends_on",
-        "uses_ui",
-        "ipc_peer",
-        "runtime_depends_on",
-    ]
-}
-
-/// JSON slice: one node + 1-hop edges + related findings.
-pub fn plugin_slice(graph: &Audiolabs, plugin_name: &str) -> Option<serde_json::Value> {
-    let node = graph.nodes.iter().find(|n| {
-        n.name == plugin_name || n.id == plugin_name || n.id.ends_with(&format!("/{}", plugin_name))
-    })?;
-    let id = &node.id;
-    let related_edges: Vec<&Edge> = graph
-        .edges
-        .iter()
-        .filter(|e| e.from == *id || e.to == *id)
-        .collect();
-    let neighbor_ids: BTreeSet<&str> = related_edges
-        .iter()
-        .flat_map(|e| [e.from.as_str(), e.to.as_str()])
-        .collect();
-    let neighbors: Vec<&Node> = graph
-        .nodes
-        .iter()
-        .filter(|n| neighbor_ids.contains(n.id.as_str()) && n.id != *id)
-        .collect();
-    let findings: Vec<&Finding> = graph
-        .findings
-        .iter()
-        .filter(|f| f.node.as_deref() == Some(id.as_str()))
-        .collect();
-
-    Some(serde_json::json!({
-        "plugin": node,
-        "neighbors": neighbors,
-        "edges": related_edges,
-        "findings": findings,
-    }))
 }

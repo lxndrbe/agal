@@ -345,7 +345,7 @@ impl<'a, 'ast> Visit<'ast> for AudioPluginVisitor<'a> {
         let prev_logic = self.in_plugin_logic_impl;
         let prev_plugin = self.in_plugin_impl;
 
-        if let Some((_, path, _)) = &node.trait_ {
+        if let Some((path, _)) = &node.trait_ {
             let trait_name = path
                 .segments
                 .last()

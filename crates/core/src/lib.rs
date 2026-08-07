@@ -139,10 +139,13 @@ pub struct GenerateOptions {
 }
 
 fn parse_cargo_toml(path: &Path) -> Result<toml::Value, String> {
-    let content = fs::read_to_string(path)
+    let mut content = fs::read_to_string(path)
         .map_err(|e| format!("failed to read {}: {}", path.display(), e))?;
+    // toml v1 requires LF line endings; normalize CRLF on Windows.
+    content.retain(|c| c != '\r');
     content
-        .parse::<toml::Value>()
+        .parse::<toml::Table>()
+        .map(toml::Value::Table)
         .map_err(|e| format!("failed to parse {}: {}", path.display(), e))
 }
 

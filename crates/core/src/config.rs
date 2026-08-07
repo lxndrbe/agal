@@ -87,11 +87,15 @@ impl ProjectConfig {
         let path = config_path(project_root);
         let mut cfg = if let Some(path) = path {
             match fs::read_to_string(&path) {
-                Ok(content) => content
-                    .parse::<toml::Value>()
-                    .ok()
-                    .and_then(|v| v.try_into::<ProjectConfig>().ok())
-                    .unwrap_or_default(),
+                Ok(mut content) => {
+                    content.retain(|c| c != '\r');
+                    content
+                        .parse::<toml::Table>()
+                        .map(toml::Value::Table)
+                        .ok()
+                        .and_then(|v| v.try_into::<ProjectConfig>().ok())
+                        .unwrap_or_default()
+                }
                 Err(_) => Self::default(),
             }
         } else {
