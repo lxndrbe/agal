@@ -6,6 +6,18 @@ Recent entries appear at the top.
 
 All notable changes to `agentic-audiolab` / `agal`.
 
+## [0.6.0] — 2026-08-07
+
+### Changed
+- **Dependency bumps**: `notify` 6→8, `syn` 2→3, `toml` 0.8→1 (breaking API changes, code fixed).
+- **Framework-repo support**: HTML view auto-detects repo type — defaults to "all nodes" when no plugins present (e.g. AURA). Overview falls back to full graph for pure-crate workspaces.
+- **View filter**: "member" nodes (neither `plugins/` nor `crates/`) now included in "crates" filter and shown as diamonds in cytoscape.
+- **UI text de-plugin-ized**: "plugins + hubs" → "hubs", search placeholder updated, overview metrics adapt to node types.
+
+### Added
+- **`[view]` config section** in `agal.toml`: `default = "overview" | "all" | "plugin" | "crate"` overrides auto-detected default view.
+- **`badge-member` CSS** for non-standard node kinds in detail drawer.
+
 ## [0.5.4] — 2026-08-06
 
 ### Fixed

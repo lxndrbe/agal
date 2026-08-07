@@ -1193,6 +1193,7 @@ fn generate_one_shot(project_root: &Path, options: &GenerateOptions) -> Result<(
                 project_name: &graph.project_name,
                 generated_at: &graph.generated_at,
                 graph_version: &graph.version,
+                view_default: project_config.view.default.as_deref(),
             },
         )?;
     }

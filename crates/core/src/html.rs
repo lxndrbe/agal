@@ -54,6 +54,8 @@ pub struct HtmlMeta<'a> {
     pub project_name: &'a str,
     pub generated_at: &'a str,
     pub graph_version: &'a str,
+    /// View default from config (None = auto-detect).
+    pub view_default: Option<&'a str>,
 }
 
 fn html_escape(s: &str) -> String {
@@ -146,7 +148,14 @@ pub fn render_html(
         .replace("{{FINDINGS_JSON}}", &findings_json)
         .replace("{{PROJECT_NAME}}", &html_escape(meta.project_name))
         .replace("{{GENERATED_AT}}", &html_escape(meta.generated_at))
-        .replace("{{GRAPH_VERSION}}", &html_escape(meta.graph_version));
+        .replace("{{GRAPH_VERSION}}", &html_escape(meta.graph_version))
+        .replace(
+            "{{VIEW_CONFIG}}",
+            &serde_json::to_string(&serde_json::json!({
+                "default": meta.view_default
+            }))
+            .unwrap_or_default(),
+        );
 
     Ok(html)
 }
@@ -180,6 +189,7 @@ fn node_colors(node: &super::Node) -> (String, Option<String>) {
     let fill = match node.kind.as_str() {
         "plugin" => "#8b5cf6",
         "crate" => "#64748b",
+        "member" => "#475569",
         _ => "#475569",
     };
     let border = match node.migration_status.as_deref() {
@@ -714,6 +724,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
     .badge-framework { background: rgba(56,189,248,.10); color: var(--info); border: 1px solid rgba(56,189,248,.20); }
     .badge-plugin { background: rgba(139,92,246,.12); color: #c4b5fd; border: 1px solid rgba(139,92,246,.25); }
     .badge-crate { background: rgba(100,116,139,.12); color: #cbd5e1; border: 1px solid rgba(100,116,139,.25); }
+    .badge-member { background: rgba(71,85,105,.12); color: #94a3b8; border: 1px solid rgba(71,85,105,.25); }
     .badge-error { background: rgba(239,68,68,.12); color: var(--err); border: 1px solid rgba(239,68,68,.25); }
     .badge-warn { background: rgba(245,158,11,.12); color: var(--warn); border: 1px solid rgba(245,158,11,.25); }
     .badge-info { background: rgba(56,189,248,.10); color: var(--info); border: 1px solid rgba(56,189,248,.20); }
@@ -846,15 +857,15 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         <div class="meta-line">v{{GRAPH_VERSION}} · {{GENERATED_AT}}</div>
         <div class="filter-group" style="margin-top:14px">
           <label>Search</label>
-          <input id="search" type="text" placeholder="plugin or crate…">
+          <input id="search" type="text" placeholder="node or crate…">
         </div>
         <div class="filter-group">
           <label>View</label>
           <select id="kind-filter">
-            <option value="overview" selected>overview (plugins + hubs)</option>
+            <option value="overview">overview (hubs)</option>
             <option value="all">all nodes</option>
-            <option value="plugin">plugins only</option>
-            <option value="crate">crates only</option>
+            <option value="plugin">plugins</option>
+            <option value="crate">crates</option>
           </select>
         </div>
         <div class="filter-group">
@@ -913,6 +924,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       const nodes = {{NODES_JSON}};
       const edges = {{EDGES_JSON}};
       const findings = {{FINDINGS_JSON}};
+      const viewConfig = {{VIEW_CONFIG}};
       let cy = null;
       let selectedId = null;
       let activeTab = 'info';
@@ -1339,19 +1351,18 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       }
 
       function hubCrateIds() {
-        // Crates that plugins actually depend on (not build-only noise —
-        // unless the user explicitly enabled build edges).
+        // Crates that plugins/members depend on (not build-only noise).
         const showBuild = document.getElementById('show-build-edges').checked;
-        const pluginIds = new Set(nodes.filter(n => n.kind === 'plugin').map(n => n.id));
+        const rootIds = new Set(nodes.filter(n => n.kind === 'plugin' || n.kind === 'member').map(n => n.id));
         const hubs = new Set();
         edges.forEach(e => {
           if ((e.kind === 'build_depends_on' || e.kind === 'dev_depends_on') && !showBuild) return;
-          const srcPlugin = pluginIds.has(e.source);
-          const tgtPlugin = pluginIds.has(e.target);
-          if (srcPlugin || tgtPlugin) {
-            const other = srcPlugin ? e.target : e.source;
+          const srcRoot = rootIds.has(e.source);
+          const tgtRoot = rootIds.has(e.target);
+          if (srcRoot || tgtRoot) {
+            const other = srcRoot ? e.target : e.source;
             const n = nodes.find(x => x.id === other);
-            if (n && n.kind === 'crate') hubs.add(other);
+            if (n && (n.kind === 'crate' || n.kind === 'member')) hubs.add(other);
           }
           // ipc_peer is plugin-plugin; runtime_depends_on to hubs
           if (e.kind === 'runtime_depends_on' || e.kind === 'uses_ui') {
@@ -1386,12 +1397,17 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         selectedId = null;
         if (!cy) return;
         closeDrawer();
-        document.getElementById('kind-filter').value = 'overview';
+        document.getElementById('kind-filter').value = defaultView();
         document.getElementById('framework-filter').value = 'all';
         document.getElementById('search').value = '';
         document.getElementById('show-build-edges').checked = false;
         persistShowBuild();
         applyFilters(true);
+      }
+
+      function defaultView() {
+        if (viewConfig && viewConfig.default) return viewConfig.default;
+        return nodes.some(n => n.kind === 'plugin') ? 'overview' : 'all';
       }
 
       function applyFilters(doLayout) {
@@ -1400,15 +1416,21 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
         const fw = document.getElementById('framework-filter').value;
         const term = document.getElementById('search').value.toLowerCase();
         const hubs = hubCrateIds();
+        const pluginCount = nodes.filter(n => n.kind === 'plugin').length;
 
         const matchedIds = new Set();
         cy.nodes().forEach(n => {
           const d = n.data();
           let kindMatch = true;
           if (kind === 'plugin') kindMatch = d.kind === 'plugin';
-          else if (kind === 'crate') kindMatch = d.kind === 'crate';
+          else if (kind === 'crate') kindMatch = d.kind === 'crate' || d.kind === 'member';
           else if (kind === 'overview') {
-            kindMatch = d.kind === 'plugin' || hubs.has(d.id);
+            if (pluginCount === 0) {
+              // Framework repos with no plugins: overview = all.
+              kindMatch = true;
+            } else {
+              kindMatch = d.kind === 'plugin' || hubs.has(d.id);
+            }
           }
           // kind === 'all' → all kinds
           const fwMatch = fw === 'all' || (d.frameworks || []).includes(fw);
@@ -1484,12 +1506,16 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
 
       // Legends
       const legend = document.getElementById('legend');
-      [
+      const legendItems = [
         { label: 'plugin', color: '#8b5cf6' },
         { label: 'crate', color: '#64748b' },
         { label: 'migrated', color: '#10b981', ring: true },
         { label: 'legacy', color: '#f59e0b', ring: true },
-      ].forEach(item => {
+      ];
+      if (nodes.some(n => n.kind === 'member')) {
+        legendItems.splice(2, 0, { label: 'member', color: '#475569' });
+      }
+      legendItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'legend-item';
         const style = item.ring ? `background:transparent;border:2px solid ${item.color}` : `background:${item.color}`;
@@ -1515,15 +1541,18 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       function renderOverview() {
         const plugins = nodes.filter(n => n.kind === 'plugin');
         const crates = nodes.filter(n => n.kind === 'crate');
+        const members = nodes.filter(n => n.kind === 'member');
+        const crateTotal = crates.length + members.length;
         const legacy = plugins.filter(n => n.migration_status === 'legacy').length;
         const migrated = plugins.filter(n => n.migration_status === 'migrated').length;
         const err = findings.filter(f => f.severity === 'error').length;
         const warn = findings.filter(f => f.severity === 'warn').length;
         const info = findings.filter(f => f.severity === 'info').length;
+        const nodeLabel = plugins.length ? 'Plugins' : 'Nodes';
 
         document.getElementById('overview-metrics').innerHTML = `
-          <div class="metric"><div class="metric-label">Plugins</div><div class="metric-value">${plugins.length}</div></div>
-          <div class="metric"><div class="metric-label">Crates</div><div class="metric-value">${crates.length}</div></div>
+          <div class="metric"><div class="metric-label">${nodeLabel}</div><div class="metric-value">${plugins.length || nodes.length}</div></div>
+          <div class="metric"><div class="metric-label">Crates</div><div class="metric-value">${crateTotal}</div></div>
           <div class="metric"><div class="metric-label">Edges</div><div class="metric-value">${edges.length}</div></div>
           <div class="metric"><div class="metric-label">Findings</div><div class="metric-value ${err ? 'err' : warn ? 'warn' : ''}">${findings.length}</div></div>
         `;
@@ -1636,6 +1665,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
           }},
           { selector: 'node[kind = "plugin"]', style: { 'shape': 'round-rectangle' } },
           { selector: 'node[kind = "crate"]', style: { 'shape': 'ellipse' } },
+          { selector: 'node[kind = "member"]', style: { 'shape': 'diamond' } },
           { selector: 'node:selected', style: {
             'border-color': '#6366f1',
             'border-width': 3,
@@ -1669,7 +1699,7 @@ const HTML_TEMPLATE: &str = r#"<!DOCTYPE html>
       cy.ready(() => {
         // Restore persisted build-edge visibility before first filter pass
         restoreShowBuild();
-        // Default: overview disk (plugins ring + hub crates center)
+        document.getElementById('kind-filter').value = defaultView();
         applyFilters(true);
       });
 

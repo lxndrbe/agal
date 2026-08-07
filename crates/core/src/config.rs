@@ -34,6 +34,22 @@ pub struct ProjectConfig {
     /// Findings to silence (intentional exceptions). Matched after analyze.
     #[serde(default)]
     pub suppress: Vec<SuppressRule>,
+    /// HTML graph view preferences.
+    #[serde(default)]
+    pub view: ViewConfig,
+}
+
+/// HTML graph view settings.
+///
+/// ```toml
+/// [view]
+/// default = "all"  # "overview" | "all" | "plugin" | "crate" (auto: overview if plugins, else all)
+/// ```
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct ViewConfig {
+    /// Default graph view mode. Auto-detected from repo contents when unset.
+    #[serde(default)]
+    pub default: Option<String>,
 }
 
 /// One intentional mute for a finding code (optionally scoped to a node).
